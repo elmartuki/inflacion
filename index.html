@@ -581,14 +581,27 @@
   <body>
     <h1>Inflación - Productos</h1>
 
-    <div
-      id="promedios"
-      style="display: flex; flex-wrap: wrap; gap: 1em; margin-bottom: 2em"
-    ></div>
-
-    <div
-      class="container"
+    <button
+      id="mostrarGraficoBtn"
       style="
+        margin: 1em auto;
+        display: block;
+        padding: 0.5em 1em;
+        border: none;
+        background: #03dac6;
+        color: black;
+        border-radius: 5px;
+        cursor: pointer;
+      "
+    >
+      Ver gráfica de variaciones
+    </button>
+
+    <!-- Contenedor del gráfico oculto por defecto -->
+    <div
+      id="contenedorGrafico"
+      style="
+        display: none;
         max-width: 900px;
         margin: 2em auto;
         background: #1e1e1e;
@@ -609,9 +622,38 @@
           flex-wrap: wrap;
           justify-content: center;
         "
-      ></div>
+      >
+        <input
+          type="text"
+          id="semana"
+          placeholder="Ej: Semana 1 - Mayo"
+          style="padding: 0.5em; border-radius: 5px; border: none"
+        />
+        <input
+          type="number"
+          id="valor"
+          placeholder="Inflación %"
+          step="0.01"
+          style="padding: 0.5em; border-radius: 5px; border: none"
+        />
+        <button
+          onclick="agregarDato()"
+          style="
+            padding: 0.5em 1em;
+            border: none;
+            border-radius: 5px;
+            background: #03dac6;
+          "
+        >
+          Agregar
+        </button>
+      </div>
     </div>
 
+    <div
+      id="promedios"
+      style="display: flex; flex-wrap: wrap; gap: 1em; margin-bottom: 2em"
+    ></div>
 
     <div id="contenedor-tarjetas"></div>
 
@@ -621,7 +663,6 @@
         <div id="modal-contenido-interno"></div>
       </div>
     </div>
-
 
     <script>
       async function cargarTarjetas() {
@@ -895,6 +936,14 @@
     </script>
 
     <script>
+      document
+        .getElementById("mostrarGraficoBtn")
+        .addEventListener("click", () => {
+          const contenedor = document.getElementById("contenedorGrafico");
+          contenedor.style.display =
+            contenedor.style.display === "none" ? "block" : "none";
+        });
+
       const ctx = document.getElementById("inflacionChart").getContext("2d");
       let datosInflacion = [
         -1.4, -0.15, -0.55, -0.77, 0.57, 4, 4.21, -0.01, 0.5, 0.3, 0.1, 0.2,
