@@ -577,41 +577,27 @@
         text-align: center;
       }
 
-      #contenedorGrafico {
-        max-width: 100%;
-        margin: 1em auto;
-        background: #1e1e1e;
-        padding: 1em;
-        border-radius: 10px;
-      }
+      /* Móviles: mayor altura para el gráfico y full width */
+      @media (max-width: 600px) {
+        #inflacionChart {
+          height: 450px !important;
+        }
 
-      #contenedorGrafico canvas {
-        width: 100% !important;
-        height: auto !important;
-      }
-
-      .controls {
-        margin-top: 1em;
-        display: flex;
-        gap: 1em;
-        flex-wrap: wrap;
-        justify-content: center;
-      }
-
-      .controls input,
-      .controls button {
-        flex: 1 1 100%;
-        padding: 0.5em;
-        border-radius: 5px;
-        border: none;
-        max-width: 300px;
-      }
-
-      @media (min-width: 600px) {
         .controls input,
         .controls button {
-          flex: 1 1 auto;
+          width: 100%;
+          max-width: 100%;
         }
+      }
+
+      .chart-scroll {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        width: 100%;
+      }
+
+      .chart-scroll canvas {
+        min-width: 800px; /* o más, dependiendo de cuántas semanas tengas */
       }
     </style>
   </head>
@@ -640,31 +626,16 @@
     </button>
 
     <!-- Contenedor del gráfico oculto por defecto -->
-    <div
-      id="contenedorGrafico"
-      style="
-        display: none;
-        max-width: 900px;
-        margin: 2em auto;
-        background: #1e1e1e;
-        padding: 2em;
-        border-radius: 10px;
-      "
-    >
-      <h2 style="text-align: center">
-        Índice de Precios al Consumidor (Semanal)
-      </h2>
+    <div id="contenedorGrafico">
+      <div class="filtros">
+        <button onclick="filtrarSemanas(4)">1 Mes</button>
+        <button onclick="filtrarSemanas(8)">2 Meses</button>
+        <button onclick="filtrarSemanas(16)">4 Meses</button>
+        <button onclick="filtrarSemanas(24)">6 Meses</button>
+        <button onclick="filtrarSemanas(52)">1 Año</button>
+        <button onclick="filtrarSemanas(null)">Todo</button>
+      </div>
       <canvas id="inflacionChart"></canvas>
-      <div
-        class="controls"
-        style="
-          margin-top: 1em;
-          display: flex;
-          gap: 1em;
-          flex-wrap: wrap;
-          justify-content: center;
-        "
-      ></div>
     </div>
 
     <div id="contenedor-tarjetas"></div>
@@ -957,92 +928,40 @@
         });
 
       const ctx = document.getElementById("inflacionChart").getContext("2d");
-      let datosInflacion = [
+
+      const datosBase = [
         -1.4, -0.15, -0.55, -0.77, 0.57, 4, 4.21, -0.01, 0.5, 0.3, 0.1, 0.2,
         2.92, -3.89, -0.47, -1.2, 6.5, -2.43, 6.24, -3.6, 1.28, 0.62, 4.57,
         -2.02, 1.76,
       ];
-      let semanas = [
-        "1° semana de noviembre",
-        "2° semana de noviembre",
-        "3° semana de noviembre",
-        "4° semana de noviembre",
-        "1° semana de diciembre",
-        "2° semana de diciembre",
-        "3° semana de diciembre",
-        "4° semana de diciembre",
-        "1° semana de enero",
-        "2° semana de enero",
-        "3° semana de enero",
-        "4° semana de enero",
-        "1° semana de febrero",
-        "2° semana de febrero",
-        "3° semana de febrero",
-        "4° semana de febrero",
-        "1° semana de marzo",
-        "2° semana de marzo",
-        "3° semana de marzo",
-        "4° semana de marzo",
-        "1° semana de abril",
-        "2° semana de abril",
-        "3° semana de abril",
-        "4° semana de abril",
-        "1° semana de mayo",
-      ];
-      let inflacionAcumulada = calcularInflacionAcumulada(datosInflacion);
 
-      let inflacionChart = new Chart(ctx, {
-        type: "bar",
-        data: {
-          labels: semanas,
-          datasets: [
-            {
-              label: "Inflación (%)",
-              data: datosInflacion,
-              backgroundColor: "#6b98c7",
-              borderColor: "#4a7ba8",
-              borderWidth: 1,
-              yAxisID: "y",
-            },
-            {
-              label: "Inflación Acumulada",
-              data: inflacionAcumulada,
-              type: "line",
-              borderColor: "#28a745",
-              borderWidth: 2,
-              pointBackgroundColor: "#28a745",
-              pointRadius: 4,
-              fill: false,
-              tension: 0.4,
-              yAxisID: "y",
-            },
-          ],
-        },
-        options: {
-          responsive: true,
-          plugins: {
-            legend: {
-              labels: {
-                font: { size: 14 },
-              },
-            },
-          },
-          scales: {
-            y: {
-              beginAtZero: true,
-              grid: { color: "rgba(255,255,255,0.1)" },
-            },
-            x: {
-              grid: {
-                display: false,
-              },
-              ticks: {
-                display: false, // oculta completamente los textos del eje X
-              },
-            },
-          },
-        },
-      });
+      const semanasBase = [
+        "1° sem nov",
+        "2° sem nov",
+        "3° sem nov",
+        "4° sem nov",
+        "1° sem dic",
+        "2° sem dic",
+        "3° sem dic",
+        "4° sem dic",
+        "1° sem ene",
+        "2° sem ene",
+        "3° sem ene",
+        "4° sem ene",
+        "1° sem feb",
+        "2° sem feb",
+        "3° sem feb",
+        "4° sem feb",
+        "1° sem mar",
+        "2° sem mar",
+        "3° sem mar",
+        "4° sem mar",
+        "1° sem abr",
+        "2° sem abr",
+        "3° sem abr",
+        "4° sem abr",
+        "1° sem may",
+      ];
 
       function calcularInflacionAcumulada(datos) {
         let acumulada = [];
@@ -1054,18 +973,144 @@
         return acumulada;
       }
 
-      function agregarDato() {
-        let semana = document.getElementById("semana").value;
-        let valor = parseFloat(document.getElementById("valor").value);
-        if (semana && !isNaN(valor)) {
-          inflacionChart.data.labels.push(semana);
-          datosInflacion.push(valor);
-          inflacionChart.data.datasets[0].data.push(valor);
-          inflacionChart.data.datasets[1].data =
-            calcularInflacionAcumulada(datosInflacion);
-          inflacionChart.update();
-        }
+      const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+      gradient.addColorStop(0, "rgba(0,255,0,0.2)");
+      gradient.addColorStop(1, "rgba(0,255,0,0)");
+
+      const inflacionChart = new Chart(ctx, {
+        type: "line",
+        data: {
+          labels: semanasBase,
+          datasets: [
+            {
+              label: "Inflación Acumulada",
+              data: calcularInflacionAcumulada(datosBase),
+              backgroundColor: gradient,
+              fill: true,
+              tension: 0.4,
+              pointRadius: 4,
+              pointHoverRadius: 7,
+              pointHitRadius: 15,
+              pointBackgroundColor: "#00ff80",
+              borderWidth: 2,
+              segment: {
+                borderColor: (ctx) => {
+                  const actual = ctx.p0.parsed.y;
+                  const siguiente = ctx.p1.parsed.y;
+                  return siguiente < actual ? "#ff4d4d" : "#00ff80";
+                },
+              },
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              enabled: true,
+              mode: "nearest",
+              intersect: false,
+              backgroundColor: "#222",
+              titleColor: "#fff",
+              bodyColor: "#fff",
+              borderColor: "#444",
+              borderWidth: 1,
+              callbacks: {
+                label: (ctx) => `Inflación Acumulada: ${ctx.raw}%`,
+              },
+            },
+          },
+          elements: {
+            point: {
+              radius: 4,
+              hoverRadius: 7,
+              hitRadius: 15,
+            },
+          },
+          scales: {
+            x: {
+              grid: { display: false },
+              ticks: {
+                color: "#888",
+                maxRotation: 0,
+                font: { size: 10 },
+              },
+            },
+            y: {
+              grid: { color: "rgba(255,255,255,0.1)" },
+              ticks: {
+                color: "#888",
+                callback: (val) => `${val}%`,
+              },
+            },
+          },
+        },
+      });
+
+      function filtrarSemanas(cantidad) {
+        const total = datosBase.length;
+        const desde = cantidad ? Math.max(total - cantidad, 0) : 0;
+        const datos = datosBase.slice(desde);
+        const etiquetas = semanasBase.slice(desde);
+        inflacionChart.data.labels = etiquetas;
+        inflacionChart.data.datasets[0].data =
+          calcularInflacionAcumulada(datos);
+        inflacionChart.update();
       }
     </script>
+
+    <style>
+      #contenedorGrafico {
+        background: #0f0f0f;
+        padding: 1em;
+        border-radius: 10px;
+        margin-top: 1em;
+        width: 65%;
+        margin: auto;
+      }
+
+      canvas {
+        width: 100% !important;
+        height: 300px !important;
+      }
+
+      .filtros {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5em;
+        justify-content: center;
+        margin-bottom: 1em;
+      }
+
+      .filtros button {
+        background-color: #222;
+        color: #0f0;
+        border: 1px solid #0f0;
+        padding: 0.4em 0.8em;
+        border-radius: 5px;
+        cursor: pointer;
+      }
+
+      .filtros button:hover {
+        background-color: #0f0;
+        color: #000;
+      }
+
+      @media screen and (max-width: 600px) {
+        canvas {
+          height: 280px !important;
+        }
+        #contenedorGrafico {
+          background: #0f0f0f;
+          padding: 1em;
+          border-radius: 10px;
+          margin-top: 1em;
+          width: 98%;
+          margin: auto;
+        }
+      }
+    </style>
   </body>
 </html>
