@@ -228,11 +228,9 @@ function verificarLogin(req, res, next) {
 }
 
 app.post("/login", (req, res) => {
-  // PRIMERO: obtenemos usuario y password del formulario
   const usuario = req.body.usuario;
   const password = req.body.password;
 
-  // SEGUNDO: ejecutamos la consulta con esos datos
   db.query(
     "SELECT * FROM admins WHERE usuario = ? AND password = ?",
     [usuario, password],
@@ -244,7 +242,9 @@ app.post("/login", (req, res) => {
 
       if (result.length > 0) {
         req.session.usuario = "admin";
-        res.redirect("/formulario.html");
+
+        // 🔁 redirige al frontend (Netlify)
+        res.redirect("https://inflacionsemanal.netlify.app/formulario.html");
       } else {
         res.send("Credenciales inválidas");
       }
