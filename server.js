@@ -8,11 +8,9 @@ const app = express();
 const cors = require('cors');
 
 
-app.use(cors());
 app.use(express.static('public'));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
-app.use(cors());  // Habilitar CORS para permitir solicitudes desde el frontend
 const https = require('https');
 const http = require('http');
 
@@ -24,7 +22,6 @@ const opcionesSSL = {
 
 
 
-app.use(cors())
 
 
 app.use(express.json());
@@ -182,21 +179,20 @@ app.put('/inflacion/:id', (req, res) => {
 });
 
 
-const cors = require('cors');
 
 app.use(cors({
-  origin: 'https://inflacionsemanal.netlify.app',
+  origin: "https://inflacionsemanal.netlify.app",
   credentials: true
 }));
-
-// Esto es opcional pero ayuda para OPTIONS y compatibilidad total:
-app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Origin", "https://inflacionsemanal.netlify.app");
-  res.header("Access-Control-Allow-Credentials", "true");
-  res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-  next();
-});
+  
+  // Middleware extra por seguridad
+  app.use((req, res, next) => {
+    res.header("Access-Control-Allow-Origin", "https://inflacionsemanal.netlify.app");
+    res.header("Access-Control-Allow-Credentials", "true");
+    res.header("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
+    res.header("Access-Control-Allow-Headers", "Content-Type");
+    next();
+  });
 
 
 app.use((req, res, next) => {
@@ -256,8 +252,8 @@ app.post("/login", (req, res) => {
 });
 
 // Verificar sesión desde JS
-app.get('/verificar-sesion', (req, res) => {
-  if (req.session && req.session.usuario === 'admin') {
+app.get("/verificar-sesion", (req, res) => {
+  if (req.session && req.session.usuario === "admin") {
     res.sendStatus(200);
   } else {
     res.sendStatus(401);
