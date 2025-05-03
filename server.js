@@ -181,13 +181,6 @@ app.put('/inflacion/:id', (req, res) => {
   });
 });
 
-db.connect(err => {
-  if (err) {
-    console.error('❌ Error de conexión:', err);
-    return;
-  }
-  console.log('✅ Conectado a MySQL');
-});
 
 app.use(cors({
   origin: "https://inflacionsemanal.netlify.app",
@@ -219,6 +212,14 @@ function verificarLogin(req, res, next) {
     res.redirect('/login.html');
   }
 }
+
+db.query("SELECT * FROM admins WHERE usuario = ? AND password = ?", [usuario, password], (err, result) => {
+  if (err) {
+    console.error("❌ ERROR SQL:", err);
+    return res.send("Error al consultar la base de datos");
+  }
+  // ...
+});
 
 // Ruta de login
 app.post('/login', (req, res) => {
