@@ -42,7 +42,7 @@
     </style>
   </head>
   <body>
-    <form id="formProducto" style="display: none;">
+    <form id="formProducto" style="display: none">
       <input type="hidden" id="id" />
 
       <label for="nombre">Nombre del producto</label>
@@ -290,6 +290,16 @@
       }
 
       cargarListaProductos();
+    </script>
+
+    <script>
+      fetch("/verificar-sesion").then((res) => {
+        if (!res.ok) {
+          window.location.href = "/login.html";
+        } else {
+          document.getElementById("formProducto").style.display = "block";
+        }
+      });
     </script>
   </body>
 </html>

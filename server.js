@@ -6,6 +6,8 @@ const session = require('express-session');
 const bcrypt = require('bcrypt');
 const app = express();
 const cors = require('cors');
+
+
 app.use(cors());
 app.use(express.static('public'));
 app.use(express.urlencoded({ extended: true }));
@@ -177,15 +179,74 @@ app.put('/inflacion/:id', (req, res) => {
   });
 });
 
+db.connect(err => {
+  if (err) {
+    console.error('❌ Error de conexión:', err);
+    return;
+  }
+  console.log('✅ Conectado a MySQL');
+});
+
+// Middleware
+app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
+app.use(session({
+  secret: 'clave-secreta',
+  resave: false,
+  saveUninitialized: true,
+}));
+
+// Servir archivos desde la misma carpeta
+app.use(express.static(__dirname));
+
+// Verificar sesión
+function verificarLogin(req, res, next) {
+  if (req.session && req.session.usuario === 'admin') {
+    next();
+  } else {
+    res.redirect('/login.html');
+  }
+}
+
+// Ruta de login
+app.post('/login', (req, res) => {
+  const { usuario, password } = req.body;
+  db.query('SELECT * FROM admins WHERE usuario = ? AND password = ?', [usuario, password], (err, result) => {
+    if (err) return res.send('Error al consultar la base de datos');
+    if (result.length > 0) {
+      req.session.usuario = 'admin';
+      res.redirect('/formulario.html');
+    } else {
+      res.redirect('/login.html');
+    }
+  });
+});
+
+// Verificar sesión desde JS
+app.get('/verificar-sesion', (req, res) => {
+  if (req.session && req.session.usuario === 'admin') {
+    res.sendStatus(200);
+  } else {
+    res.sendStatus(401);
+  }
+});
+
+// Ruta protegida
+app.get('/formulario.html', verificarLogin, (req, res) => {
+  res.sendFile(path.join(__dirname, 'formulario.html'));
+});
+
+// Cerrar sesión
+app.get('/logout', (req, res) => {
+  req.session.destroy(() => {
+    res.redirect('/login.html');
+  });
+});
+
+
 https.createServer(opcionesSSL, app).listen(4000, '0.0.0.0', () => {
     console.log('Servidor HTTPS corriendo en https://veterinarialol.ddns.net:4000');
-  });
-
-
-// Iniciar el servidor
-app.listen(4000, '0.0.0.0', () => {
-    console.log('Servidor corriendo en el puerto 4000');
-  });
+});
 
 
 
