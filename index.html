@@ -576,6 +576,43 @@
         font-style: italic;
         text-align: center;
       }
+
+      #contenedorGrafico {
+        max-width: 100%;
+        margin: 1em auto;
+        background: #1e1e1e;
+        padding: 1em;
+        border-radius: 10px;
+      }
+
+      #contenedorGrafico canvas {
+        width: 100% !important;
+        height: auto !important;
+      }
+
+      .controls {
+        margin-top: 1em;
+        display: flex;
+        gap: 1em;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+
+      .controls input,
+      .controls button {
+        flex: 1 1 100%;
+        padding: 0.5em;
+        border-radius: 5px;
+        border: none;
+        max-width: 300px;
+      }
+
+      @media (min-width: 600px) {
+        .controls input,
+        .controls button {
+          flex: 1 1 auto;
+        }
+      }
     </style>
   </head>
   <body>
@@ -996,12 +1033,11 @@
               grid: { color: "rgba(255,255,255,0.1)" },
             },
             x: {
-              grid: { display: false },
+              grid: {
+                display: false,
+              },
               ticks: {
-                autoSkip: false,
-                maxRotation: 45,
-                minRotation: 45,
-                font: { size: 12 },
+                display: false, // oculta completamente los textos del eje X
               },
             },
           },
