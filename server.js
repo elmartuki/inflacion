@@ -237,16 +237,16 @@ app.post("/login", (req, res) => {
     (err, result) => {
       if (err) {
         console.error("❌ ERROR EN CONSULTA MYSQL:", err);
-        return res.send("Error al consultar la base de datos");
+        return res.status(500).json({ success: false, error: "Error en base de datos" });
       }
 
       if (result.length > 0) {
         req.session.usuario = "admin";
 
-        // 🔁 redirige al frontend (Netlify)
-        res.redirect("https://inflacionsemanal.netlify.app/formulario.html");
+        // Enviar JSON con la URL de redirección
+        return res.json({ success: true, redirect: "https://inflacionsemanal.netlify.app/formulario.html" });
       } else {
-        res.send("Credenciales inválidas");
+        return res.status(401).json({ success: false, error: "Credenciales inválidas" });
       }
     }
   );

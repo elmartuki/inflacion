@@ -39,7 +39,7 @@
     </style>
   </head>
   <body>
-    <form method="POST" action="https://https://inflacionsemanal.netlify.app/:4000/login">
+    <form id="loginForm">
       <h2>Login de Administrador</h2>
       <input type="text" name="usuario" placeholder="Usuario" required />
       <input
@@ -50,5 +50,37 @@
       />
       <button type="submit">Iniciar sesión</button>
     </form>
+
+    <script>
+      const form = document.getElementById("loginForm");
+
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const formData = new FormData(form);
+        const usuario = formData.get("usuario");
+        const password = formData.get("password");
+
+        const res = await fetch("https://veterinarialol.ddns.net:4000/login", {
+          method: "POST",
+          credentials: "include", // MUY IMPORTANTE para enviar la cookie
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ usuario, password }),
+        });
+
+        if (res.ok) {
+          const result = await res.json();
+          if (result.success && result.redirect) {
+            window.location.href = result.redirect;
+          } else {
+            alert("Credenciales inválidas");
+          }
+        } else {
+          alert("Error al iniciar sesión");
+        }
+      });
+    </script>
   </body>
 </html>
