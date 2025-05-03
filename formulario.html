@@ -214,8 +214,9 @@
             tarjeta.style.flexDirection = "column";
             tarjeta.style.gap = "0.5em";
 
-            // 🔥 Estas 2 líneas hacen que sean 2 por fila en móvil
-            tarjeta.style.flex = "0 0 calc(50% - 1em)";
+            // ✅ lo importante:
+            tarjeta.style.flex = "1 1 calc(50% - 1em)";
+            tarjeta.style.maxWidth = "calc(50% - 1em)";
             tarjeta.style.boxSizing = "border-box";
 
             tarjeta.innerHTML = `
