@@ -213,26 +213,29 @@ function verificarLogin(req, res, next) {
   }
 }
 
-db.query("SELECT * FROM admins WHERE usuario = ? AND password = ?", [usuario, password], (err, result) => {
-  if (err) {
-    console.error("❌ ERROR SQL:", err);
-    return res.send("Error al consultar la base de datos");
-  }
-  // ...
-});
+app.post("/login", (req, res) => {
+  // PRIMERO: obtenemos usuario y password del formulario
+  const usuario = req.body.usuario;
+  const password = req.body.password;
 
-// Ruta de login
-app.post('/login', (req, res) => {
-  const { usuario, password } = req.body;
-  db.query('SELECT * FROM admins WHERE usuario = ? AND password = ?', [usuario, password], (err, result) => {
-    if (err) return res.send('Error al consultar la base de datos');
-    if (result.length > 0) {
-      req.session.usuario = 'admin';
-      res.redirect('/formulario.html');
-    } else {
-      res.redirect('/login.html');
+  // SEGUNDO: ejecutamos la consulta con esos datos
+  db.query(
+    "SELECT * FROM admins WHERE usuario = ? AND password = ?",
+    [usuario, password],
+    (err, result) => {
+      if (err) {
+        console.error("❌ ERROR EN CONSULTA MYSQL:", err);
+        return res.send("Error al consultar la base de datos");
+      }
+
+      if (result.length > 0) {
+        req.session.usuario = "admin";
+        res.redirect("/formulario.html");
+      } else {
+        res.send("Credenciales inválidas");
+      }
     }
-  });
+  );
 });
 
 // Verificar sesión desde JS
