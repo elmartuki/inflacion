@@ -4,6 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Inflación - Panel Moderno</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
     <style>
       body {
         background-color: #121212;
@@ -580,6 +582,32 @@
     <h1>Inflación - Productos</h1>
 
     <div
+      class="container"
+      style="
+        max-width: 900px;
+        margin: 2em auto;
+        background: #1e1e1e;
+        padding: 2em;
+        border-radius: 10px;
+      "
+    >
+      <h2 style="text-align: center">
+        Índice de Precios al Consumidor (Semanal)
+      </h2>
+      <canvas id="inflacionChart"></canvas>
+      <div
+        class="controls"
+        style="
+          margin-top: 1em;
+          display: flex;
+          gap: 1em;
+          flex-wrap: wrap;
+          justify-content: center;
+        "
+      ></div>
+    </div>
+
+    <div
       id="promedios"
       style="display: flex; flex-wrap: wrap; gap: 1em; margin-bottom: 2em"
     ></div>
@@ -862,6 +890,120 @@
       }
 
       cargarTarjetas();
+    </script>
+
+    <script>
+      const ctx = document.getElementById("inflacionChart").getContext("2d");
+      let datosInflacion = [
+        -1.4, -0.15, -0.55, -0.77, 0.57, 4, 4.21, -0.01, 0.5, 0.3, 0.1, 0.2,
+        2.92, -3.89, -0.47, -1.2, 6.5, -2.43, 6.24, -3.6, 1.28, 0.62, 4.57,
+        -2.02, 1.76,
+      ];
+      let semanas = [
+        "1° semana de noviembre",
+        "2° semana de noviembre",
+        "3° semana de noviembre",
+        "4° semana de noviembre",
+        "1° semana de diciembre",
+        "2° semana de diciembre",
+        "3° semana de diciembre",
+        "4° semana de diciembre",
+        "1° semana de enero",
+        "2° semana de enero",
+        "3° semana de enero",
+        "4° semana de enero",
+        "1° semana de febrero",
+        "2° semana de febrero",
+        "3° semana de febrero",
+        "4° semana de febrero",
+        "1° semana de marzo",
+        "2° semana de marzo",
+        "3° semana de marzo",
+        "4° semana de marzo",
+        "1° semana de abril",
+        "2° semana de abril",
+        "3° semana de abril",
+        "4° semana de abril",
+        "1° semana de mayo",
+      ];
+      let inflacionAcumulada = calcularInflacionAcumulada(datosInflacion);
+
+      let inflacionChart = new Chart(ctx, {
+        type: "bar",
+        data: {
+          labels: semanas,
+          datasets: [
+            {
+              label: "Inflación (%)",
+              data: datosInflacion,
+              backgroundColor: "#6b98c7",
+              borderColor: "#4a7ba8",
+              borderWidth: 1,
+              yAxisID: "y",
+            },
+            {
+              label: "Inflación Acumulada",
+              data: inflacionAcumulada,
+              type: "line",
+              borderColor: "#28a745",
+              borderWidth: 2,
+              pointBackgroundColor: "#28a745",
+              pointRadius: 4,
+              fill: false,
+              tension: 0.4,
+              yAxisID: "y",
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: {
+              labels: {
+                font: { size: 14 },
+              },
+            },
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              grid: { color: "rgba(255,255,255,0.1)" },
+            },
+            x: {
+              grid: { display: false },
+              ticks: {
+                autoSkip: false,
+                maxRotation: 45,
+                minRotation: 45,
+                font: { size: 12 },
+              },
+            },
+          },
+        },
+      });
+
+      function calcularInflacionAcumulada(datos) {
+        let acumulada = [];
+        let total = 1;
+        for (let i = 0; i < datos.length; i++) {
+          total *= 1 + datos[i] / 100;
+          acumulada.push(((total - 1) * 100).toFixed(2));
+        }
+        return acumulada;
+      }
+
+      function agregarDato() {
+        let semana = document.getElementById("semana").value;
+        let valor = parseFloat(document.getElementById("valor").value);
+        if (semana && !isNaN(valor)) {
+          inflacionChart.data.labels.push(semana);
+          datosInflacion.push(valor);
+          inflacionChart.data.datasets[0].data.push(valor);
+          inflacionChart.data.datasets[1].data =
+            calcularInflacionAcumulada(datosInflacion);
+          inflacionChart.update();
+        }
+      }
     </script>
   </body>
 </html>
