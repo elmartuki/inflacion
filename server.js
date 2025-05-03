@@ -197,7 +197,7 @@ app.use(session({
   secret: 'clave-secreta',
   resave: false,
   saveUninitialized: false,
-  rolling: true, // 🔁 reinicia el contador en cada request activa
+  rolling: true,
   cookie: {
     maxAge: 2 * 60 * 1000, // 2 minutos
     sameSite: 'none',
