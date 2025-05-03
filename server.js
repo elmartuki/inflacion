@@ -24,7 +24,9 @@ const opcionesSSL = {
 
 
 
-app.use(cors());
+app.use(cors())
+
+
 app.use(express.json());
 
 
@@ -185,6 +187,16 @@ db.connect(err => {
     return;
   }
   console.log('✅ Conectado a MySQL');
+});
+
+app.use(cors({
+  origin: "https://inflacionsemanal.netlify.app",
+  credentials: true,
+}));
+
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Credentials", "true");
+  next();
 });
 
 // Middleware
