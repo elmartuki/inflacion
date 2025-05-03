@@ -90,14 +90,7 @@
     </h3>
     <div
       id="listaProductos"
-      style="
-        display: flex;
-        flex-wrap: wrap;
-        gap: 1em;
-        justify-content: center;
-        max-width: 600px;
-        margin: auto;
-      "
+      style="display: flex; flex-wrap: wrap; gap: 1em; justify-content: center"
     ></div>
 
     <button
@@ -220,6 +213,10 @@
             tarjeta.style.display = "flex";
             tarjeta.style.flexDirection = "column";
             tarjeta.style.gap = "0.5em";
+
+            // 🔥 Estas 2 líneas hacen que sean 2 por fila en móvil
+            tarjeta.style.flex = "0 0 calc(50% - 1em)";
+            tarjeta.style.boxSizing = "border-box";
 
             tarjeta.innerHTML = `
         <input type="text" value="${
