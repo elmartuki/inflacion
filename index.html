@@ -613,16 +613,6 @@
           flex: 1 1 auto;
         }
       }
-
-      @media (max-width: 600px) {
-        #contenedorGrafico {
-          padding: 1.5em;
-        }
-
-        #contenedorGrafico canvas {
-          height: 350px !important;
-        }
-      }
     </style>
   </head>
   <body>
@@ -650,9 +640,17 @@
     </button>
 
     <!-- Contenedor del gráfico oculto por defecto -->
-    <div id="contenedorGrafico">
-      <canvas id="inflacionChart"></canvas>
-    </div>
+    <div
+      id="contenedorGrafico"
+      style="
+        display: none;
+        max-width: 900px;
+        margin: 2em auto;
+        background: #1e1e1e;
+        padding: 2em;
+        border-radius: 10px;
+      "
+    >
       <h2 style="text-align: center">
         Índice de Precios al Consumidor (Semanal)
       </h2>
