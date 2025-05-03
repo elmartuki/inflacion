@@ -43,6 +43,13 @@
       form#formProducto {
         display: none !important;
       }
+
+      @media (max-width: 600px) {
+        #listaProductos > div {
+          flex: 0 0 calc(50% - 1em);
+          box-sizing: border-box;
+        }
+      }
     </style>
   </head>
   <body>
@@ -83,7 +90,14 @@
     </h3>
     <div
       id="listaProductos"
-      style="display: flex; flex-wrap: wrap; gap: 1em; justify-content: center"
+      style="
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1em;
+        justify-content: center;
+        max-width: 600px;
+        margin: auto;
+      "
     ></div>
 
     <button
