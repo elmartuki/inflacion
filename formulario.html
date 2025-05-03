@@ -42,8 +42,7 @@
     </style>
   </head>
   <body>
-    <h2 style="text-align: center">Formulario de Producto</h2>
-    <form id="formProducto">
+    <form id="formProducto" style="display: none;">
       <input type="hidden" id="id" />
 
       <label for="nombre">Nombre del producto</label>
@@ -75,28 +74,13 @@
 
       <button type="submit">Guardar</button>
     </form>
-
     <h3 style="text-align: center; margin-top: 2em">
       Publicaciones existentes
     </h3>
-    <table
-      style="
-        width: 100%;
-        margin-top: 1em;
-        border-collapse: collapse;
-        background-color: #1e1e1e;
-        color: white;
-      "
-    >
-      <thead>
-        <tr>
-          <th style="padding: 8px; border: 1px solid #444">Nombre</th>
-          <th style="padding: 8px; border: 1px solid #444">Precio Hoy</th>
-          <th style="padding: 8px; border: 1px solid #444">Acciones</th>
-        </tr>
-      </thead>
-      <tbody id="listaProductos"></tbody>
-    </table>
+    <div
+      id="listaProductos"
+      style="display: flex; flex-wrap: wrap; gap: 1em; justify-content: center"
+    ></div>
 
     <button
       onclick="desplazarPrecios()"
@@ -205,21 +189,88 @@
           const res = await fetch(
             "https://veterinarialol.ddns.net:4000/inflacion"
           );
-          const datos = await res.json();
+          const productos = await res.json();
           const lista = document.getElementById("listaProductos");
           lista.innerHTML = "";
 
-          datos.forEach((p) => {
-            const fila = document.createElement("tr");
-            fila.innerHTML = `
-          <td style='padding: 8px; border: 1px solid #444;'>${p.nombre}</td>
-          <td style='padding: 8px; border: 1px solid #444;'>$${p.precio_hoy}</td>
-          <td style='padding: 8px; border: 1px solid #444;'>
-            <button onclick="obtenerProducto(${p.id})">Editar</button>
-            <button onclick="eliminarProducto(${p.id})" style="margin-left: 8px; background-color: #e53935; color: white; border: none; border-radius: 4px; padding: 4px 8px; cursor: pointer;">Eliminar</button>
-          </td>
-        `;
-            lista.appendChild(fila);
+          productos.forEach((p) => {
+            const tarjeta = document.createElement("div");
+            tarjeta.style.backgroundColor = "#1e1e1e";
+            tarjeta.style.padding = "1em";
+            tarjeta.style.borderRadius = "10px";
+            tarjeta.style.border = "1px solid #444";
+            tarjeta.style.display = "flex";
+            tarjeta.style.flexDirection = "column";
+            tarjeta.style.gap = "0.5em";
+
+            tarjeta.innerHTML = `
+        <input type="text" value="${
+          p.nombre
+        }" placeholder="Nombre" style="background:#2a2a2a; color:white; padding:0.5em; border:none; border-radius:5px;" disabled />
+        <input type="number" value="${
+          p.precio_hoy ?? ""
+        }" placeholder="Precio Hoy" style="background:#2a2a2a; color:white; padding:0.5em; border:none; border-radius:5px;" disabled />
+        <input type="number" value="${
+          p.precio_7dias ?? ""
+        }" placeholder="Precio 7 días" style="background:#2a2a2a; color:white; padding:0.5em; border:none; border-radius:5px;" disabled />
+        <input type="number" value="${
+          p.precio_14dias ?? ""
+        }" placeholder="Precio 14 días" style="background:#2a2a2a; color:white; padding:0.5em; border:none; border-radius:5px;" disabled />
+        <input type="number" value="${
+          p.precio_21dias ?? ""
+        }" placeholder="Precio 21 días" style="background:#2a2a2a; color:white; padding:0.5em; border:none; border-radius:5px;" disabled />
+        <input type="number" value="${
+          p.precio_historico ?? ""
+        }" placeholder="Precio Histórico" style="background:#2a2a2a; color:white; padding:0.5em; border:none; border-radius:5px;" disabled />
+
+        <div style="display: flex; gap: 0.5em;">
+          <button class="btn-editar">✏️ Editar</button>
+          <button class="btn-guardar" style="display:none; background:#03dac6;">💾 Guardar</button>
+          <button onclick="eliminarProducto(${
+            p.id
+          })" style="background: #e53935; color:white;">🗑️ Eliminar</button>
+        </div>
+      `;
+
+            const inputs = tarjeta.querySelectorAll("input");
+            const btnEditar = tarjeta.querySelector(".btn-editar");
+            const btnGuardar = tarjeta.querySelector(".btn-guardar");
+
+            btnEditar.onclick = () => {
+              inputs.forEach((i) => (i.disabled = false));
+              btnEditar.style.display = "none";
+              btnGuardar.style.display = "inline-block";
+            };
+
+            btnGuardar.onclick = async () => {
+              const datos = {
+                nombre: inputs[0].value,
+                precio_hoy: parseFloat(inputs[1].value),
+                precio_7dias: parseFloat(inputs[2].value),
+                precio_14dias: parseFloat(inputs[3].value),
+                precio_21dias: parseFloat(inputs[4].value),
+                precio_historico: parseFloat(inputs[5].value),
+              };
+
+              try {
+                await fetch(
+                  `https://veterinarialol.ddns.net:4000/inflacion/${p.id}`,
+                  {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(datos),
+                  }
+                );
+
+                alert("✅ Producto actualizado");
+                cargarListaProductos();
+              } catch (error) {
+                alert("❌ Error al actualizar producto");
+                console.error(error);
+              }
+            };
+
+            lista.appendChild(tarjeta);
           });
         } catch (error) {
           console.error("Error al cargar productos:", error);
