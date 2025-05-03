@@ -6,8 +6,6 @@ const session = require('express-session');
 const bcrypt = require('bcrypt');
 const app = express();
 const cors = require('cors');
-
-
 app.use(express.static('public'));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
@@ -20,7 +18,18 @@ const opcionesSSL = {
     key: fs.readFileSync('C:/xampp/apache/conf/ssl.key/private.key'),  // Ruta a la clave privada
   };
 
-
+  app.use(cors({
+    origin: "https://inflacionsemanal.netlify.app",
+    credentials: true
+  }));
+  
+  app.use((req, res, next) => {
+    res.header("Access-Control-Allow-Origin", "https://inflacionsemanal.netlify.app");
+    res.header("Access-Control-Allow-Credentials", "true");
+    res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+    res.header("Access-Control-Allow-Headers", "Content-Type");
+    next();
+  });
 
 
 
@@ -179,56 +188,25 @@ app.put('/inflacion/:id', (req, res) => {
 });
 
 
-
-app.use(cors({
-  origin: "https://inflacionsemanal.netlify.app",
-  credentials: true
-}));
-  
-  // Middleware extra por seguridad
-  app.use((req, res, next) => {
-    res.header("Access-Control-Allow-Origin", "https://inflacionsemanal.netlify.app");
-    res.header("Access-Control-Allow-Credentials", "true");
-    res.header("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
-    res.header("Access-Control-Allow-Headers", "Content-Type");
-    next();
-  });
-
-
-app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Credentials", "true");
-  next();
-});
-
-// Middleware
-app.use(express.urlencoded({ extended: true }));
+// 📦 Parsear body JSON y formularios
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// 🔐 Configurar sesión con cookie segura
 app.use(session({
-  secret: 'clave-secreta',
+  secret: "clave-secreta",
   resave: false,
   saveUninitialized: false,
   cookie: {
-    sameSite: 'none',
+    sameSite: "none",
     secure: true
   }
 }));
 
 
-// Servir archivos desde la misma carpeta
-app.use(express.static(__dirname));
-
-// Verificar sesión
-function verificarLogin(req, res, next) {
-  if (req.session && req.session.usuario === 'admin') {
-    next();
-  } else {
-    res.redirect('/login.html');
-  }
-}
-
+// ✅ Ruta de login con redirección por JSON
 app.post("/login", (req, res) => {
-  const usuario = req.body.usuario;
-  const password = req.body.password;
+  const { usuario, password } = req.body;
 
   db.query(
     "SELECT * FROM admins WHERE usuario = ? AND password = ?",
@@ -241,9 +219,10 @@ app.post("/login", (req, res) => {
 
       if (result.length > 0) {
         req.session.usuario = "admin";
-
-        // Enviar JSON con la URL de redirección
-        return res.json({ success: true, redirect: "https://inflacionsemanal.netlify.app/formulario.html" });
+        return res.json({
+          success: true,
+          redirect: "https://inflacionsemanal.netlify.app/formulario.html"
+        });
       } else {
         return res.status(401).json({ success: false, error: "Credenciales inválidas" });
       }
@@ -251,7 +230,7 @@ app.post("/login", (req, res) => {
   );
 });
 
-// Verificar sesión desde JS
+// 🔒 Ruta protegida para verificar sesión desde JS
 app.get("/verificar-sesion", (req, res) => {
   if (req.session && req.session.usuario === "admin") {
     res.sendStatus(200);
@@ -260,22 +239,23 @@ app.get("/verificar-sesion", (req, res) => {
   }
 });
 
-// Ruta protegida
-app.get('/formulario.html', verificarLogin, (req, res) => {
-  res.sendFile(path.join(__dirname, 'formulario.html'));
-});
-
-// Cerrar sesión
-app.get('/logout', (req, res) => {
+// 🔐 Cerrar sesión
+app.get("/logout", (req, res) => {
   req.session.destroy(() => {
-    res.redirect('/login.html');
+    res.send("Sesión cerrada");
   });
 });
 
 
 https.createServer(opcionesSSL, app).listen(4000, '0.0.0.0', () => {
     console.log('Servidor HTTPS corriendo en https://veterinarialol.ddns.net:4000');
-});
+  });
+
+
+// Iniciar el servidor
+app.listen(4000, '0.0.0.0', () => {
+    console.log('Servidor corriendo en el puerto 4000');
+  });
 
 
 
