@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Inflación - Panel Moderno</title>
+    <style>
+      body {
+        background-color: #121212;
+        color: #fff;
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 1em;
+      }
+
+      #contenedor-tarjetas {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+        gap: 1em;
+      }
+
+      .tarjeta {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .bloque-var {
+        display: none;
+        flex-direction: column;
+        gap: 0.75em;
+        margin-top: 1em;
+      }
+
+      @media (max-width: 1200px) {
+        .tarjeta {
+          width: 220px;
+        }
+      }
+
+      @media (max-width: 800px) {
+        .tarjeta {
+          width: 90%;
+        }
+      }
+
+      h1 {
+        text-align: center;
+        margin-bottom: 1em;
+      }
+
+      .tarjeta {
+        background-color: #1e1e1e;
+        border-radius: 10px;
+        padding: 1em;
+        margin-bottom: 1em;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        cursor: pointer;
+        position: relative;
+      }
+
+      .tarjeta-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.5em;
+      }
+
+      .tarjeta-nombre {
+        font-size: 1.2em;
+        font-weight: bold;
+        text-transform: capitalize;
+      }
+
+      .tarjeta-precio-hoy {
+        font-size: 1.4em;
+        font-weight: bold;
+      }
+
+      .tarjeta-precio-anterior {
+        color: #888;
+        font-size: 0.9em;
+      }
+
+      .variacion {
+        font-size: 1em;
+        margin-top: 0.3em;
+      }
+
+      .suba {
+        color: #00ff95;
+      }
+
+      .baja {
+        color: #ff6f6f;
+      }
+
+      .bloque-var {
+        margin-top: 1em;
+        display: none;
+        flex-direction: column;
+        gap: 0.75em;
+      }
+
+      .bloque-var div {
+        padding: 1em;
+        border-radius: 10px;
+        font-weight: bold;
+        text-align: center;
+        font-size: 1.1em;
+      }
+
+      .bloque-var small {
+        display: block;
+        margin-top: 0.5em;
+        font-size: 0.8em;
+        color: #ccc;
+      }
+
+      .fuego {
+        color: white;
+        animation: reboteFuego 5s ease-in-out forwards;
+      }
+
+      .piano {
+        color: white;
+        animation: rebotePiano 5s ease-in-out forwards;
+      }
+
+      @keyframes fuegoFlash {
+        0% {
+          background-color: #00aa00;
+          transform: scale(1);
+        }
+        100% {
+          background-color: #00ff00;
+          transform: scale(1.1);
+        }
+      }
+
+      @keyframes fuegoGlow {
+        0% {
+          box-shadow: 0 0 20px 10px rgba(0, 255, 0, 0.4);
+        }
+        100% {
+          box-shadow: 0 0 50px 25px rgba(0, 255, 0, 0.8);
+        }
+      }
+
+      @keyframes pianoFlash {
+        0% {
+          background-color: #5a0000;
+          transform: scale(1);
+        }
+        100% {
+          background-color: #ff0000;
+          transform: scale(1.1);
+        }
+      }
+
+      @keyframes glowPulse {
+        0% {
+          box-shadow: 0 0 20px 10px rgba(255, 0, 0, 0.6);
+        }
+        100% {
+          box-shadow: 0 0 50px 25px rgba(255, 0, 0, 0.9);
+        }
+      }
+
+      /* Tonos para promedio */
+      .tono-verde-suave {
+        background-color: rgba(0, 255, 100, 0.2);
+        color: #00ff95;
+      }
+
+      .tono-verde-fuerte {
+        background-color: rgba(0, 255, 0, 0.4);
+        color: #00ff00;
+      }
+
+      .tono-rojo-suave {
+        background-color: rgba(255, 50, 50, 0.2);
+        color: #ff6f6f;
+      }
+
+      .tono-rojo-fuerte {
+        background-color: rgba(255, 0, 0, 0.4);
+        color: #ff4d4d;
+      }
+
+      /* Estilos animados para tarjetas completas */
+      .fuego-total {
+        animation: fuegoOnce 5s ease-in-out forwards;
+      }
+
+      .piano-total {
+        animation: pianoOnce 5s ease-in-out forwards;
+      }
+
+      @keyframes fuegoOnce {
+        0% {
+          background-color: #1e1e1e;
+          box-shadow: 0 0 0px 0px rgba(0, 255, 0, 0);
+        }
+        50% {
+          background-color: #00aa00;
+          box-shadow: 0 0 40px 20px rgba(0, 255, 0, 0.6);
+        }
+        100% {
+          background-color: rgba(0, 255, 0, 0.1);
+          box-shadow: 0 0 15px 8px rgba(0, 255, 0, 0.2);
+        }
+      }
+
+      @keyframes pianoOnce {
+        0% {
+          background-color: #1e1e1e;
+          box-shadow: 0 0 0px 0px rgba(255, 0, 0, 0);
+        }
+        50% {
+          background-color: #5a0000;
+          box-shadow: 0 0 40px 20px rgba(255, 0, 0, 0.6);
+        }
+        100% {
+          background-color: rgba(255, 0, 0, 0.1);
+          box-shadow: 0 0 15px 8px rgba(255, 0, 0, 0.2);
+        }
+      }
+
+      .fuego-total::before {
+        content: "🔥🔥🔥";
+        position: absolute;
+        top: -10px;
+        right: -10px;
+        font-size: 1.5em;
+        animation: emojiBounceFuego 5s ease-in-out forwards;
+        transform-origin: top right;
+      }
+
+      .piano-total::before {
+        content: "🎹🎹🎹";
+        position: absolute;
+        top: -10px;
+        right: -10px;
+        font-size: 1.5em;
+        animation: emojiBouncePiano 5s ease-in-out forwards;
+        transform-origin: top right;
+      }
+
+      .variacion-suave {
+        background-color: #1e1e1e;
+        animation: pulseSuave 5s ease-in-out forwards;
+      }
+
+      @keyframes pulseSuave {
+        0% {
+          background-color: #1e1e1e;
+          box-shadow: 0 0 0px 0px rgba(255, 255, 255, 0);
+        }
+        50% {
+          box-shadow: 0 0 10px 4px rgba(255, 255, 255, 0.1);
+        }
+        100% {
+          box-shadow: 0 0 5px 2px rgba(255, 255, 255, 0.05);
+        }
+      }
+
+      .variacion-verde-1 {
+        background-color: rgba(0, 255, 100, 0.1);
+        color: #b6ffcb;
+        border: 1px solid rgba(0, 255, 100, 0.2);
+        box-shadow: 0 0 5px 1px rgba(0, 255, 100, 0.1);
+      }
+
+      .variacion-verde-2 {
+        background-color: rgba(0, 255, 100, 0.2);
+        color: #8effb0;
+        border: 1px solid rgba(0, 255, 100, 0.3);
+        box-shadow: 0 0 6px 2px rgba(0, 255, 100, 0.2);
+      }
+
+      .variacion-verde-3 {
+        background-color: rgba(0, 255, 100, 0.3);
+        color: #5aff96;
+        border: 1px solid rgba(0, 255, 100, 0.4);
+        box-shadow: 0 0 8px 3px rgba(0, 255, 100, 0.3);
+      }
+
+      .variacion-verde-4 {
+        background-color: rgba(0, 255, 100, 0.4);
+        color: #2eff7b;
+        border: 1px solid rgba(0, 255, 100, 0.5);
+        box-shadow: 0 0 10px 4px rgba(0, 255, 100, 0.4);
+      }
+
+      .variacion-rojo-1 {
+        background-color: rgba(255, 50, 50, 0.1);
+        color: #ffc7c7;
+        border: 1px solid rgba(255, 50, 50, 0.2);
+        box-shadow: 0 0 5px 1px rgba(255, 50, 50, 0.1);
+      }
+
+      .variacion-rojo-2 {
+        background-color: rgba(255, 50, 50, 0.2);
+        color: #ff9f9f;
+        border: 1px solid rgba(255, 50, 50, 0.3);
+        box-shadow: 0 0 6px 2px rgba(255, 50, 50, 0.2);
+      }
+
+      .variacion-rojo-3 {
+        background-color: rgba(255, 50, 50, 0.3);
+        color: #ff7676;
+        border: 1px solid rgba(255, 50, 50, 0.4);
+        box-shadow: 0 0 8px 3px rgba(255, 50, 50, 0.3);
+      }
+
+      .variacion-rojo-4 {
+        background-color: rgba(255, 50, 50, 0.4);
+        color: #ff4d4d;
+        border: 1px solid rgba(255, 50, 50, 0.5);
+        box-shadow: 0 0 10px 4px rgba(255, 50, 50, 0.4);
+      }
+
+      @keyframes emojiBounce {
+        0%,
+        100% {
+          transform: scale(1);
+        }
+        50% {
+          transform: scale(1.6);
+        }
+      }
+
+      @keyframes reboteFuego {
+        0% {
+          transform: scale(1);
+          background-color: #00aa00;
+        }
+        50% {
+          transform: scale(1.15);
+          background-color: #00ff00;
+        }
+        100% {
+          transform: scale(1); /* 🔥 más grande */
+          background-color: rgba(0, 255, 0, 0.15); /* verde translúcido */
+        }
+      }
+
+      @keyframes rebotePiano {
+        0% {
+          transform: scale(1);
+          background-color: #5a0000;
+        }
+        50% {
+          transform: scale(0.9);
+          background-color: #ff0000;
+        }
+        100% {
+          transform: scale(1); /* 🎹 más pequeño */
+          background-color: rgba(255, 0, 0, 0.15); /* rojo translúcido */
+        }
+      }
+
+      @keyframes emojiBounceFuego {
+        0% {
+          transform: scale(1);
+        }
+        50% {
+          transform: scale(1.6);
+        }
+        100% {
+          transform: scale(1.2);
+        }
+      }
+
+      @keyframes emojiBouncePiano {
+        0% {
+          transform: scale(1);
+        }
+        50% {
+          transform: scale(0.9);
+        }
+        100% {
+          transform: scale(1.2);
+        }
+      }
+
+      .rebote-fuego {
+        animation: reboteFuegoMini 5s ease-in-out forwards;
+      }
+
+      .rebote-piano {
+        animation: rebotePianoMini 5s ease-in-out forwards;
+      }
+
+      @keyframes reboteFuegoMini {
+        0% {
+          transform: scale(1);
+          background-color: #00aa00;
+        }
+        50% {
+          transform: scale(1.2);
+          background-color: #00ff00;
+        }
+        100% {
+          transform: scale(1);
+          background-color: rgba(0, 255, 0, 0.1);
+        }
+      }
+
+      @keyframes rebotePianoMini {
+        0% {
+          transform: scale(1);
+          background-color: #5a0000;
+        }
+        50% {
+          transform: scale(0.9);
+          background-color: #ff0000;
+        }
+        100% {
+          transform: scale(1);
+          background-color: rgba(255, 0, 0, 0.1);
+        }
+      }
+
+      .modal-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.6);
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+      }
+
+      .modal-content {
+        background-color: #1e1e1e;
+        border-radius: 15px;
+        padding: 2em;
+        color: #fff;
+        max-width: 400px;
+        width: 90%;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.6);
+        position: relative;
+      }
+
+      .modal-close {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: #333;
+        color: #fff;
+        border: none;
+        font-size: 1.2em;
+        cursor: pointer;
+        border-radius: 5px;
+      }
+
+      .modal-contenido-interno .bloque {
+        border-radius: 10px;
+        padding: 1em;
+        margin: 0.5em 0;
+        font-weight: bold;
+        text-align: center;
+      }
+
+      .variacion-sin-cambio {
+        background-color: #333 !important;
+        color: white;
+        padding: 1em;
+        border-radius: 10px;
+        min-height: 100px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        margin-bottom: 0.6em;
+        font-size: 1.1em;
+        line-height: 1.4em;
+      }
+
+      .bloque.verde {
+        background: #009e3c;
+        color: white;
+        box-shadow: 0 0 8px 2px rgba(0, 255, 0, 0.5);
+      }
+
+      .bloque.rojo {
+        background: #911e1e;
+        color: white;
+        box-shadow: 0 0 8px 2px rgba(255, 0, 0, 0.5);
+      }
+
+      .bloque.neutro {
+        background: #444;
+        color: #ccc;
+      }
+
+      /* Modal básico */
+      .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(10, 10, 10, 0.8);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 999;
+      }
+
+      .modal-content {
+        background-color: #1e1e1e;
+        color: white;
+        padding: 1.5em;
+        border-radius: 10px;
+        width: 90%;
+        max-width: 500px;
+        box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+        font-family: Arial, sans-serif;
+        display: flex;
+        flex-direction: column;
+        gap: 1em;
+      }
+
+      .modal-close {
+        background: none;
+        border: none;
+        color: white;
+        font-size: 1.2em;
+        position: absolute;
+        top: 1em;
+        right: 1em;
+        cursor: pointer;
+      }
+
+      .modal-content .variacion-rojo-1,
+      .modal-content .variacion-rojo-2,
+      .modal-content .variacion-rojo-3,
+      .modal-content .variacion-rojo-4,
+      .modal-content .variacion-verde-1,
+      .modal-content .variacion-verde-2,
+      .modal-content .variacion-verde-3,
+      .modal-content .variacion-verde-4,
+      .modal-content .fuego,
+      .modal-content .piano {
+        padding: 1em;
+        border-radius: 8px;
+        margin-bottom: 0.6em;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        min-height: 100px; /* hace que todos los contenedores tengan mismo tamaño */
+        font-size: 1.1em;
+        line-height: 1.4em;
+      }
+
+      .modal-content .bloque-var {
+        min-height: 100px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 1em;
+        border-radius: 10px;
+        background-color: #2c2c2c;
+        color: white;
+        font-size: 1.1em;
+        margin-bottom: 0.6em;
+      }
+
+      /* Cuando no hay variación */
+      .modal-content .bloque-var:empty::before {
+        content: "Sin datos disponibles";
+        color: #999;
+        font-style: italic;
+        text-align: center;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Inflación - Productos</h1>
+
+    <div
+      id="promedios"
+      style="display: flex; flex-wrap: wrap; gap: 1em; margin-bottom: 2em"
+    ></div>
+
+    <div id="contenedor-tarjetas"></div>
+
+    <div id="modal" class="modal-overlay">
+      <div class="modal-content">
+        <button id="modal-cerrar" class="modal-close">✖</button>
+        <div id="modal-contenido-interno"></div>
+      </div>
+    </div>
+
+    <script>
+      async function cargarTarjetas() {
+        try {
+          const res = await fetch(
+            "https://veterinarialol.ddns.net:4000/inflacion"
+          );
+          const datos = await res.json();
+
+          const contenedor = document.getElementById("contenedor-tarjetas");
+          const divPromedios = document.getElementById("promedios");
+          const modal = document.getElementById("modal");
+          const modalContenido = document.getElementById(
+            "modal-contenido-interno"
+          );
+          const modalCerrar = document.getElementById("modal-cerrar");
+
+          modalCerrar.addEventListener("click", () => {
+            modal.style.display = "none";
+            modalContenido.innerHTML = "";
+          });
+
+          let suma1 = 0,
+            suma2 = 0,
+            suma3 = 0,
+            sumaHist = 0;
+          let count1 = 0,
+            count2 = 0,
+            count3 = 0,
+            countHist = 0;
+
+          const variacion = (a, b) =>
+            a && b && b !== 0 ? ((a - b) / b) * 100 : null;
+
+          datos.forEach((p) => {
+            const v1 = variacion(p.precio_hoy, p.precio_7dias);
+            const v2 = variacion(p.precio_hoy, p.precio_14dias);
+            const v3 = variacion(p.precio_hoy, p.precio_21dias);
+            const vh = variacion(p.precio_hoy, p.precio_historico);
+            if (v1 !== null) {
+              suma1 += v1;
+              count1++;
+            }
+            if (v2 !== null) {
+              suma2 += v2;
+              count2++;
+            }
+            if (v3 !== null) {
+              suma3 += v3;
+              count3++;
+            }
+            if (vh !== null) {
+              sumaHist += vh;
+              countHist++;
+            }
+          });
+
+          const promedio = (suma, count) => (count ? suma / count : null);
+
+          const generarTarjetaPromedio = (titulo, valor) => {
+            let clase = "";
+            if (valor > 20) {
+              clase = "fuego rebote-fuego";
+            } else if (valor >= 15) {
+              clase = "variacion-verde-4";
+            } else if (valor >= 10) {
+              clase = "variacion-verde-3";
+            } else if (valor >= 5) {
+              clase = "variacion-verde-2";
+            } else if (valor > 0) {
+              clase = "variacion-verde-1";
+            } else if (valor < -20) {
+              clase = "piano rebote-piano";
+            } else if (valor <= -15) {
+              clase = "variacion-rojo-4";
+            } else if (valor <= -10) {
+              clase = "variacion-rojo-3";
+            } else if (valor <= -5) {
+              clase = "variacion-rojo-2";
+            } else if (valor < 0) {
+              clase = "variacion-rojo-1";
+            }
+
+            const signo = valor > 0 ? "▲" : valor < 0 ? "▼" : "";
+            const contenido =
+              valor !== null
+                ? `${signo} ${Math.abs(valor).toFixed(2)}%`
+                : "N/D";
+            return `
+              <div class="tarjeta ${clase}" style="flex: 1; min-width: 200px;">
+                <div class="tarjeta-nombre">${titulo}</div>
+                <div class="tarjeta-precio-hoy">${contenido}</div>
+              </div>
+            `;
+          };
+
+          divPromedios.innerHTML = `
+            ${generarTarjetaPromedio(
+              "Variación 1 semana",
+              promedio(suma1, count1)
+            )}
+            ${generarTarjetaPromedio(
+              "Variación 2 semanas",
+              promedio(suma2, count2)
+            )}
+            ${generarTarjetaPromedio(
+              "Variación 3 semanas",
+              promedio(suma3, count3)
+            )}
+            ${generarTarjetaPromedio(
+              "Precio en Nov/23",
+              promedio(sumaHist, countHist)
+            )}
+          `;
+
+          datos.forEach((p) => {
+            const variacion7 = variacion(p.precio_hoy, p.precio_7dias);
+            const variacion14 = variacion(p.precio_hoy, p.precio_14dias);
+            const variacion21 = variacion(p.precio_hoy, p.precio_21dias);
+            const variacionHist = variacion(p.precio_hoy, p.precio_historico);
+
+            let claseVar7 = "";
+            let claseTarjeta = "";
+
+            if (variacion7 > 20) {
+              claseTarjeta = "fuego-total";
+            } else if (variacion7 >= 15) {
+              claseTarjeta = "variacion-verde-4";
+            } else if (variacion7 >= 10) {
+              claseTarjeta = "variacion-verde-3";
+            } else if (variacion7 >= 5) {
+              claseTarjeta = "variacion-verde-2";
+            } else if (variacion7 > 0) {
+              claseTarjeta = "variacion-verde-1";
+            } else if (variacion7 < -20) {
+              claseTarjeta = "piano-total";
+            } else if (variacion7 <= -15) {
+              claseTarjeta = "variacion-rojo-4";
+            } else if (variacion7 <= -10) {
+              claseTarjeta = "variacion-rojo-3";
+            } else if (variacion7 <= -5) {
+              claseTarjeta = "variacion-rojo-2";
+            } else if (variacion7 < 0) {
+              claseTarjeta = "variacion-rojo-1";
+            }
+
+            const tarjeta = document.createElement("div");
+            tarjeta.className = `tarjeta ${claseTarjeta}`;
+
+            const varTexto =
+              variacion7 !== null
+                ? variacion7 > 20
+                  ? `🔥 ▲ ${variacion7.toFixed(1)}%`
+                  : variacion7 < -20
+                  ? `🎹 ▼ ${Math.abs(variacion7).toFixed(1)}%`
+                  : variacion7 > 0
+                  ? `⬆️ ${variacion7.toFixed(1)}%`
+                  : variacion7 < 0
+                  ? `⬇️ ${Math.abs(variacion7).toFixed(1)}%`
+                  : `0.0%`
+                : "-";
+
+            const bloqueVar = (label, valor, valorOriginal) => {
+              if (valor === null) {
+                return `
+      <div class="${clase} variacion-sin-cambio">
+        ${label}: -<br>
+        <small>Precio: $${valorOriginal ?? "-"}</small>
+      </div>`;
+              }
+
+              if (valor === 0) {
+                return `
+      <div class="variacion-sin-cambio">
+        ${label}: 0.0%<br>
+        <small>Precio: $${valorOriginal ?? "-"}</small>
+      </div>`;
+              }
+              if (valor === null) return `<div>${label}: -</div>`;
+
+              let clase = "";
+              if (valor > 20) clase = "fuego";
+              else if (valor >= 15) clase = "variacion-verde-4";
+              else if (valor >= 10) clase = "variacion-verde-3";
+              else if (valor >= 5) clase = "variacion-verde-2";
+              else if (valor > 0) clase = "variacion-verde-1";
+              else if (valor < -20) clase = "piano";
+              else if (valor <= -15) clase = "variacion-rojo-4";
+              else if (valor <= -10) clase = "variacion-rojo-3";
+              else if (valor <= -5) clase = "variacion-rojo-2";
+              else if (valor < 0) clase = "variacion-rojo-1";
+
+              const signo =
+                valor > 20
+                  ? `🔥 ▲`
+                  : valor < -20
+                  ? `🎹 ▼`
+                  : valor > 0
+                  ? `▲`
+                  : valor < 0
+                  ? `▼`
+                  : "";
+
+              return `
+                <div class="${clase}">
+                  ${label}: ${signo} ${Math.abs(valor).toFixed(1)}%
+                  <small>Precio: $${valorOriginal ?? "-"}</small>
+                </div>
+              `;
+            };
+
+            const bloqueHTML = `
+             ${bloqueVar("Variacion 1 semana", variacion7, p.precio_7dias)}
+              ${bloqueVar("Variación 2 semanas", variacion14, p.precio_14dias)}
+              ${bloqueVar("Variación 3 semanas", variacion21, p.precio_21dias)}
+              ${bloqueVar(
+                "Precio en Nov/23",
+                variacionHist,
+                p.precio_historico
+              )}
+            `;
+
+            tarjeta.innerHTML = `
+              <div class="tarjeta-header">
+                <div class="tarjeta-nombre">${p.nombre}</div>
+                <div class="tarjeta-precio-hoy">$${p.precio_hoy ?? "-"}</div>
+              </div>
+              <div class="variacion ${claseVar7}">${varTexto} &mdash; Últ. 7 días</div>
+              <div class="tarjeta-precio-anterior">Anterior: $${
+                p.precio_7dias ?? "-"
+              }</div>
+            `;
+
+            window.addEventListener("click", (e) => {
+              const modal = document.getElementById("modal");
+              if (e.target === modal) {
+                modal.style.display = "none";
+                const modalContenido = document.getElementById(
+                  "modal-contenido-interno"
+                );
+                if (modalContenido) modalContenido.innerHTML = "";
+              }
+            });
+
+            tarjeta.addEventListener("click", () => {
+              const isMobile = window.innerWidth <= 768;
+              if (isMobile) {
+                let cont = tarjeta.querySelector(".bloque-var");
+                if (!cont) {
+                  cont = document.createElement("div");
+                  cont.className = "bloque-var";
+                  cont.innerHTML = bloqueHTML;
+                  tarjeta.appendChild(cont);
+                }
+                cont.style.display =
+                  cont.style.display === "flex" ? "none" : "flex";
+              } else {
+                modalContenido.innerHTML = `<h3>${p.nombre}</h3>` + bloqueHTML;
+                modal.style.display = "flex";
+              }
+            });
+
+            contenedor.appendChild(tarjeta);
+          });
+        } catch (err) {
+          console.error("Error al cargar productos:", err);
+        }
+      }
+
+      cargarTarjetas();
+    </script>
+  </body>
+</html>

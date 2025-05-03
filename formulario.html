@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Agregar o Editar Producto</title>
+    <style>
+      body {
+        background-color: #121212;
+        color: #ffffff;
+        font-family: sans-serif;
+        padding: 2em;
+      }
+      form {
+        display: flex;
+        flex-direction: column;
+        max-width: 400px;
+        margin: auto;
+        gap: 1em;
+        background: #1e1e1e;
+        padding: 2em;
+        border-radius: 10px;
+      }
+      input,
+      button {
+        padding: 0.5em;
+        border: none;
+        border-radius: 5px;
+      }
+      input {
+        background: #2a2a2a;
+        color: #ffffff;
+      }
+      button {
+        background: #03dac6;
+        color: #000;
+        cursor: pointer;
+      }
+      button:hover {
+        background: #00bfa5;
+      }
+    </style>
+  </head>
+  <body>
+    <h2 style="text-align: center">Formulario de Producto</h2>
+    <form id="formProducto">
+      <input type="hidden" id="id" />
+
+      <label for="nombre">Nombre del producto</label>
+      <input
+        type="text"
+        id="nombre"
+        placeholder="Nombre del producto"
+        required
+      />
+
+      <label for="precio_hoy">Precio Hoy</label>
+      <input type="number" id="precio_hoy" placeholder="Precio Hoy" required />
+
+      <label for="precio_7dias">Precio 7 Días</label>
+      <input type="number" id="precio_7dias" placeholder="Precio 7 Días" />
+
+      <label for="precio_14dias">Precio 14 Días</label>
+      <input type="number" id="precio_14dias" placeholder="Precio 14 Días" />
+
+      <label for="precio_21dias">Precio 21 Días</label>
+      <input type="number" id="precio_21dias" placeholder="Precio 21 Días" />
+
+      <label for="precio_historico">Precio Histórico</label>
+      <input
+        type="number"
+        id="precio_historico"
+        placeholder="Precio Histórico"
+      />
+
+      <button type="submit">Guardar</button>
+    </form>
+
+    <h3 style="text-align: center; margin-top: 2em">
+      Publicaciones existentes
+    </h3>
+    <table
+      style="
+        width: 100%;
+        margin-top: 1em;
+        border-collapse: collapse;
+        background-color: #1e1e1e;
+        color: white;
+      "
+    >
+      <thead>
+        <tr>
+          <th style="padding: 8px; border: 1px solid #444">Nombre</th>
+          <th style="padding: 8px; border: 1px solid #444">Precio Hoy</th>
+          <th style="padding: 8px; border: 1px solid #444">Acciones</th>
+        </tr>
+      </thead>
+      <tbody id="listaProductos"></tbody>
+    </table>
+
+    <button
+      onclick="desplazarPrecios()"
+      style="
+        margin: 1em;
+        padding: 0.5em 1em;
+        background-color: #03dac6;
+        color: black;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+      "
+    >
+      Desplazar Precios Semanales
+    </button>
+
+    <script>
+      async function desplazarPrecios() {
+        try {
+          const res = await fetch(
+            "https://veterinarialol.ddns.net:4000/desplazar",
+            {
+              method: "POST",
+            }
+          );
+          const data = await res.text();
+          alert(data);
+          window.location.reload();
+        } catch (error) {
+          alert("❌ Error al desplazar precios");
+          console.error(error);
+        }
+      }
+
+      async function obtenerProducto(id) {
+        try {
+          const res = await fetch(
+            `https://veterinarialol.ddns.net:4000/inflacion`
+          );
+          const productos = await res.json();
+          const producto = productos.find((p) => p.id == id);
+          if (!producto) return;
+
+          document.getElementById("id").value = producto.id;
+          document.getElementById("nombre").value = producto.nombre;
+          document.getElementById("precio_hoy").value = producto.precio_hoy;
+          document.getElementById("precio_7dias").value = producto.precio_7dias;
+          document.getElementById("precio_14dias").value =
+            producto.precio_14dias;
+          document.getElementById("precio_21dias").value =
+            producto.precio_21dias;
+          document.getElementById("precio_historico").value =
+            producto.precio_historico;
+        } catch (err) {
+          console.error("Error al obtener producto", err);
+        }
+      }
+
+      const urlParams = new URLSearchParams(window.location.search);
+      const idParam = urlParams.get("id");
+      if (idParam) obtenerProducto(idParam);
+
+      const form = document.getElementById("formProducto");
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const id = document.getElementById("id").value;
+        const datos = {
+          nombre: document.getElementById("nombre").value,
+          precio_hoy: parseFloat(document.getElementById("precio_hoy").value),
+          precio_7dias: parseFloat(
+            document.getElementById("precio_7dias").value
+          ),
+          precio_14dias: parseFloat(
+            document.getElementById("precio_14dias").value
+          ),
+          precio_21dias: parseFloat(
+            document.getElementById("precio_21dias").value
+          ),
+          precio_historico: parseFloat(
+            document.getElementById("precio_historico").value
+          ),
+        };
+
+        const metodo = id ? "PUT" : "POST";
+        const url = id
+          ? `https://veterinarialol.ddns.net:4000/inflacion/${id}`
+          : "https://veterinarialol.ddns.net:4000/inflacion";
+
+        try {
+          await fetch(url, {
+            method: metodo,
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(datos),
+          });
+          alert("Producto guardado con éxito");
+          window.location.href = "formulario.html";
+        } catch (error) {
+          alert("Error al guardar producto");
+          console.error(error);
+        }
+      });
+
+      async function cargarListaProductos() {
+        try {
+          const res = await fetch(
+            "https://veterinarialol.ddns.net:4000/inflacion"
+          );
+          const datos = await res.json();
+          const lista = document.getElementById("listaProductos");
+          lista.innerHTML = "";
+
+          datos.forEach((p) => {
+            const fila = document.createElement("tr");
+            fila.innerHTML = `
+          <td style='padding: 8px; border: 1px solid #444;'>${p.nombre}</td>
+          <td style='padding: 8px; border: 1px solid #444;'>$${p.precio_hoy}</td>
+          <td style='padding: 8px; border: 1px solid #444;'>
+            <button onclick="obtenerProducto(${p.id})">Editar</button>
+            <button onclick="eliminarProducto(${p.id})" style="margin-left: 8px; background-color: #e53935; color: white; border: none; border-radius: 4px; padding: 4px 8px; cursor: pointer;">Eliminar</button>
+          </td>
+        `;
+            lista.appendChild(fila);
+          });
+        } catch (error) {
+          console.error("Error al cargar productos:", error);
+        }
+      }
+
+      async function eliminarProducto(id) {
+        if (!confirm("¿Estás seguro de eliminar este producto?")) return;
+        try {
+          await fetch(`https://veterinarialol.ddns.net:4000/inflacion/${id}`, {
+            method: "DELETE",
+          });
+          cargarListaProductos();
+        } catch (error) {
+          console.error("Error al eliminar producto:", error);
+        }
+      }
+
+      cargarListaProductos();
+    </script>
+  </body>
+</html>
