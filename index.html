@@ -682,8 +682,8 @@
 
           datos.forEach((p) => {
             const v1 = variacion(p.precio_hoy, p.precio_7dias);
-            const v2 = variacion(p.precio_hoy, p.precio_14dias);
-            const v3 = variacion(p.precio_hoy, p.precio_21dias);
+            const v2 = variacion(p.precio_7dias, p.precio_14dias);
+            const v3 = variacion(p.precio_14dias, p.precio_21dias);
             const vh = variacion(p.precio_hoy, p.precio_historico);
             if (v1 !== null) {
               suma1 += v1;
