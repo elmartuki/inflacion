@@ -715,6 +715,65 @@
 
           const promedio = (suma, count) => (count ? suma / count : null);
 
+          // NUEVO: Inflación del último mes (sumando últimas 4 semanas)
+          const inflacionUltimoMes = () => {
+            const inflacionesSemanales = datos
+              .map((p) => {
+                const variaciones = [
+                  variacion(p.precio_hoy, p.precio_7dias),
+                  variacion(p.precio_7dias, p.precio_14dias),
+                  variacion(p.precio_14dias, p.precio_21dias),
+                  variacion(p.precio_21dias, p.precio_28dias),
+                ].filter((v) => v !== null);
+                return (
+                  variaciones.reduce((a, b) => a + b, 0) / variaciones.length ||
+                  null
+                );
+              })
+              .filter((v) => v !== null);
+            const total =
+              inflacionesSemanales.reduce((a, b) => a + b, 0) /
+              inflacionesSemanales.length;
+            return total?.toFixed(2) ?? "N/D";
+
+          const generarTarjetaPromedio = (titulo, valor) => {
+            let clase = "";
+            if (valor > 20) clase = "fuego rebote-fuego";
+            else if (valor >= 15) clase = "variacion-verde-4";
+            else if (valor >= 10) clase = "variacion-verde-3";
+            else if (valor >= 5) clase = "variacion-verde-2";
+            else if (valor > 0) clase = "variacion-verde-1";
+            else if (valor < -20) clase = "piano rebote-piano";
+            else if (valor <= -15) clase = "variacion-rojo-4";
+            else if (valor <= -10) clase = "variacion-rojo-3";
+            else if (valor <= -5) clase = "variacion-rojo-2";
+            else if (valor < 0) clase = "variacion-rojo-1";
+
+            const signo = valor > 0 ? "▲" : valor < 0 ? "▼" : "";
+            const contenido =
+              valor !== null
+                ? `${signo} ${Math.abs(valor).toFixed(2)}%`
+                : "N/D";
+
+            return `
+        <div class="tarjeta ${clase}" style="flex: 1; min-width: 200px;">
+          <div class="tarjeta-nombre">${titulo}</div>
+          <div class="tarjeta-precio-hoy">${contenido}</div>
+        </div>
+      `;
+          };
+
+          divPromedios.innerHTML = `
+      ${generarTarjetaPromedio("Variación 1 semana", promedio(suma1, count1))}
+      ${generarTarjetaPromedio("Variación 2 semanas", promedio(suma2, count2))}
+      ${generarTarjetaPromedio("Variación 3 semanas", promedio(suma3, count3))}
+      ${generarTarjetaPromedio("Inflación último mes", inflacionUltimoMes())}
+      ${generarTarjetaPromedio(
+        "Respecto a Nov/24",
+        promedio(sumaHist, countHist)
+      )}
+    `;
+
           const generarTarjetaPromedio = (titulo, valor) => {
             let clase = "";
             if (valor > 20) {
@@ -760,29 +819,6 @@
             });
             return ((total - 1) * 100).toFixed(2);
           }
-
-          divPromedios.innerHTML = `
-            ${generarTarjetaPromedio(
-              "Variación 1 semana",
-              promedio(suma1, count1)
-            )}
-            ${generarTarjetaPromedio(
-              "Variación 2 semanas",
-              promedio(suma2, count2)
-            )}
-            ${generarTarjetaPromedio(
-              "Variación 3 semanas",
-              promedio(suma3, count3)
-            )}
-            ${generarTarjetaPromedio(
-              "Inflación intermensual",
-              inflacionUltimoMes()
-            )}
-            ${generarTarjetaPromedio(
-              "Respecto a Nov/24",
-              promedio(sumaHist, countHist)
-            )}
-          `;
 
           datos.forEach((p) => {
             const variacion7 = variacion(p.precio_hoy, p.precio_7dias);
