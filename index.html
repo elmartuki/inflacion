@@ -786,8 +786,8 @@
 
           datos.forEach((p) => {
             const variacion7 = variacion(p.precio_hoy, p.precio_7dias);
-            const variacion14 = variacion(p.precio_hoy, p.precio_14dias);
-            const variacion21 = variacion(p.precio_hoy, p.precio_21dias);
+            const variacion14 = variacion(p.precio_7dias, p.precio_14dias);
+            const variacion21 = variacion(p.precio_14dias, p.precio_21dias);
             const variacionHist = variacion(p.precio_hoy, p.precio_historico);
 
             let claseVar7 = "";
@@ -881,7 +881,7 @@
             };
 
             const bloqueHTML = `
-             ${bloqueVar("Variacion 1 semana", variacion7, p.precio_7dias)}
+             ${bloqueVar("Variacion 1 semana", p.precio_hoy, p.precio_7dias)}
               ${bloqueVar("Variación 2 semanas", variacion14, p.precio_14dias)}
               ${bloqueVar("Variación 3 semanas", variacion21, p.precio_21dias)}
               ${bloqueVar(
