@@ -747,6 +747,15 @@
             `;
           };
 
+          function inflacionUltimoMes() {
+            const indicesAbril = [20, 21, 22, 23];
+            let total = 1;
+            indicesAbril.forEach((i) => {
+              total *= 1 + datosBase[i] / 100;
+            });
+            return ((total - 1) * 100).toFixed(2);
+          }
+
           divPromedios.innerHTML = `
             ${generarTarjetaPromedio(
               "Variación 1 semana",
@@ -759,6 +768,10 @@
             ${generarTarjetaPromedio(
               "Variación 3 semanas",
               promedio(suma3, count3)
+            )}
+            ${generarTarjetaPromedio(
+              "Inflación mensual (Abril)",
+              inflacionUltimoMes()
             )}
             ${generarTarjetaPromedio(
               "Respecto a Nov/24",
