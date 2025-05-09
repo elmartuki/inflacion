@@ -926,9 +926,8 @@
                 cont.style.display =
                   cont.style.display === "flex" ? "none" : "flex";
               } else {
-                modalContenido.innerHTML = `<h3>${p.nombre}</h3>` + bloqueHTML;
                 modalContenido.innerHTML =
-                  `<h3>${precio_hoy}</h3>` + bloqueHTML;
+                  `<h3>${p.nombre}</h3> <h4>${precio_hoy}</h4>` + bloqueHTML;
                 modal.style.display = "flex";
               }
             });
