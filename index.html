@@ -658,27 +658,6 @@
     </div>
 
     <script>
-      // ********************************************************************************************
-      // NOTA IMPORTANTE:
-      // Para que la función inflacionUltimoMes() funcione, la variable 'datosBase'
-      // DEBE SER DEFINIDA y accesible, y contener los datos esperados para el cálculo.
-      // Aquí la he definido como un array vacío para que el código sea funcional,
-      // PERO DEBES REEMPLAZARLO CON TUS DATOS REALES.
-      // Si 'inflacionUltimoMes' no es necesaria o no tienes 'datosBase', puedes eliminarla.
-      // ********************************************************************************************
-      const datosBase = [
-        /*
-        Ejemplo de cómo podría ser 'datosBase' si los índices 22, 23, 24, 25
-        corresponden a variaciones porcentuales semanales:
-        ..., // Otros datos antes del índice 22
-        0.0,  // datosBase[22] - Por ejemplo, 0.0% para la semana 1 de "último mes"
-        -0.77, // datosBase[23] - Por ejemplo, -0.77% para la semana 2
-        0.57, // datosBase[24] - Por ejemplo, 0.57% para la semana 3
-        4.0,  // datosBase[25] - Por ejemplo, 4.0% para la semana 4
-        ...
-        */
-      ];
-
       async function cargarTarjetas() {
         try {
           const res = await fetch(
@@ -699,84 +678,43 @@
             modalContenido.innerHTML = "";
           });
 
-          // Inicializar sumas y contadores para PRECIOS
-          let sumaPrecioHoy = 0,
-            countPrecioHoy = 0;
-          let sumaPrecio7dias = 0,
-            countPrecio7dias = 0;
-          let sumaPrecio14dias = 0,
-            countPrecio14dias = 0;
-          let sumaPrecio21dias = 0,
-            countPrecio21dias = 0;
-          let sumaPrecioHistorico = 0,
-            countPrecioHistorico = 0;
+          let suma1 = 0,
+            suma2 = 0,
+            suma3 = 0,
+            sumaHist = 0;
+          let count1 = 0,
+            count2 = 0,
+            count3 = 0,
+            countHist = 0;
 
           const variacion = (a, b) =>
             a && b && b !== 0 ? ((a - b) / b) * 100 : null;
 
           datos.forEach((p) => {
-            // Acumular sumas para los PRECIOS (para calcular el promedio de precios)
-            if (p.precio_hoy !== null && p.precio_hoy !== undefined) {
-              sumaPrecioHoy += p.precio_hoy;
-              countPrecioHoy++;
+            const v1 = variacion(p.precio_hoy, p.precio_7dias);
+            const v2 = variacion(p.precio_7dias, p.precio_14dias);
+            const v3 = variacion(p.precio_14dias, p.precio_21dias);
+            const vh = variacion(p.precio_hoy, p.precio_historico);
+            if (v1 !== null) {
+              suma1 += v1;
+              count1++;
             }
-            if (p.precio_7dias !== null && p.precio_7dias !== undefined) {
-              sumaPrecio7dias += p.precio_7dias;
-              countPrecio7dias++;
+            if (v2 !== null) {
+              suma2 += v2;
+              count2++;
             }
-            if (p.precio_14dias !== null && p.precio_14dias !== undefined) {
-              sumaPrecio14dias += p.precio_14dias;
-              countPrecio14dias++;
+            if (v3 !== null) {
+              suma3 += v3;
+              count3++;
             }
-            if (p.precio_21dias !== null && p.precio_21dias !== undefined) {
-              sumaPrecio21dias += p.precio_21dias;
-              countPrecio21dias++;
-            }
-            if (
-              p.precio_historico !== null &&
-              p.precio_historico !== undefined
-            ) {
-              sumaPrecioHistorico += p.precio_historico;
-              countPrecioHistorico++;
+            if (vh !== null) {
+              sumaHist += vh;
+              countHist++;
             }
           });
 
-          // Calcular los promedios de los precios
-          const promedioPrecioHoy = countPrecioHoy
-            ? sumaPrecioHoy / countPrecioHoy
-            : null;
-          const promedioPrecio7dias = countPrecio7dias
-            ? sumaPrecio7dias / countPrecio7dias
-            : null;
-          const promedioPrecio14dias = countPrecio14dias
-            ? sumaPrecio14dias / countPrecio14dias
-            : null;
-          const promedioPrecio21dias = countPrecio21dias
-            ? sumaPrecio21dias / countPrecio21dias
-            : null;
-          const promedioPrecioHistorico = countPrecioHistorico
-            ? sumaPrecioHistorico / countPrecioHistorico
-            : null;
+          const promedio = (suma, count) => (count ? suma / count : null);
 
-          // Calcular las variaciones de los promedios de precios
-          const promedioVariacion1Semana = variacion(
-            promedioPrecioHoy,
-            promedioPrecio7dias
-          );
-          const promedioVariacion2Semanas = variacion(
-            promedioPrecio7dias,
-            promedioPrecio14dias
-          );
-          const promedioVariacion3Semanas = variacion(
-            promedioPrecio14dias,
-            promedioPrecio21dias
-          );
-          const promedioVariacionHistorico = variacion(
-            promedioPrecioHoy,
-            promedioPrecioHistorico
-          );
-
-          // Función auxiliar para generar las tarjetas de promedio
           const generarTarjetaPromedio = (titulo, valor) => {
             let clase = "";
             if (valor > 20) {
@@ -814,61 +752,47 @@
             `;
           };
 
-          // ********************************************************************************************
-          // Función para la inflación del último mes (requiere 'datosBase' definido)
-          // Si no usas 'datosBase' o no necesitas este cálculo, puedes eliminar esta función
-          // y su llamada.
-          // ********************************************************************************************
           function inflacionUltimoMes() {
-            // Asumo que 'datosBase' es un array de porcentajes semanales.
-            // Los índices 22, 23, 24, 25 deben existir en 'datosBase'.
-            // Si 'datosBase' no está definido o los índices no son válidos, esto fallará.
-            const indicesUltimoMes = [22, 23, 24, 25]; // Ejemplo: Asumo estos índices de 'datosBase' corresponden a las 4 semanas de un mes
-
-            let totalFactor = 1;
-            let countSemanas = 0;
-
-            indicesUltimoMes.forEach((i) => {
-              if (datosBase[i] !== null && datosBase[i] !== undefined) {
-                totalFactor *= 1 + datosBase[i] / 100;
-                countSemanas++;
-              }
+            const indicesAbril = [22, 23, 24, 25];
+            let total = 1;
+            indicesAbril.forEach((i) => {
+              total *= 1 + datosBase[i] / 100;
             });
-
-            if (countSemanas === 0) return null; // No hay datos para calcular
-            return ((totalFactor - 1) * 100).toFixed(2);
+            return ((total - 1) * 100).toFixed(2);
           }
 
           divPromedios.innerHTML = `
             ${generarTarjetaPromedio(
-              "Inflación Semanal (Prom. Precios)",
-              promedioVariacion1Semana
+              "Variación 1 semana",
+              promedio(suma1, count1)
             )}
             ${generarTarjetaPromedio(
-              "Inflación Quincenal (Prom. Precios)",
-              promedioVariacion2Semanas
+              "Variación 2 semanas",
+              promedio(suma2, count2)
             )}
             ${generarTarjetaPromedio(
-              "Inflación 3 Semanas (Prom. Precios)",
-              promedioVariacion3Semanas
+              "Variación 3 semanas",
+              promedio(suma3, count3)
             )}
             ${generarTarjetaPromedio(
               "Inflación intermensual",
               inflacionUltimoMes()
             )}
             ${generarTarjetaPromedio(
-              "Inflación Histórica (Prom. Precios)",
-              promedioVariacionHistorico
+              "Respecto a Nov/24",
+              promedio(sumaHist, countHist)
             )}
           `;
 
           datos.forEach((p) => {
             const variacion7 = variacion(p.precio_hoy, p.precio_7dias);
-            const variacion14 = variacion(p.precio_hoy, p.precio_14dias); // Esto es precio hoy vs 14 días atrás
-            const variacion21 = variacion(p.precio_hoy, p.precio_21dias); // Esto es precio hoy vs 21 días atrás
+            const variacion14 = variacion(p.precio_hoy, p.precio_14dias);
+            const variacion21 = variacion(p.precio_hoy, p.precio_21dias);
             const variacionHist = variacion(p.precio_hoy, p.precio_historico);
 
+            let claseVar7 = "";
             let claseTarjeta = "";
+
             if (variacion7 > 20) {
               claseTarjeta = "fuego-total";
             } else if (variacion7 >= 15) {
@@ -910,7 +834,7 @@
             const bloqueVar = (label, valor, valorOriginal) => {
               if (valor === null) {
                 return `
-      <div class="variacion-sin-cambio">
+      <div class="${clase} variacion-sin-cambio">
         ${label}: -<br>
         <small>Precio: $${valorOriginal ?? "-"}</small>
       </div>`;
@@ -923,18 +847,19 @@
         <small>Precio: $${valorOriginal ?? "-"}</small>
       </div>`;
               }
+              if (valor === null) return `<div>${label}: -</div>`;
 
-              let claseBloque = ""; // Usar una variable diferente para la clase del bloque interno
-              if (valor > 20) claseBloque = "fuego";
-              else if (valor >= 15) claseBloque = "variacion-verde-4";
-              else if (valor >= 10) claseBloque = "variacion-verde-3";
-              else if (valor >= 5) claseBloque = "variacion-verde-2";
-              else if (valor > 0) claseBloque = "variacion-verde-1";
-              else if (valor < -20) claseBloque = "piano";
-              else if (valor <= -15) claseBloque = "variacion-rojo-4";
-              else if (valor <= -10) claseBloque = "variacion-rojo-3";
-              else if (valor <= -5) claseBloque = "variacion-rojo-2";
-              else if (valor < 0) claseBloque = "variacion-rojo-1";
+              let clase = "";
+              if (valor > 20) clase = "fuego";
+              else if (valor >= 15) clase = "variacion-verde-4";
+              else if (valor >= 10) clase = "variacion-verde-3";
+              else if (valor >= 5) clase = "variacion-verde-2";
+              else if (valor > 0) clase = "variacion-verde-1";
+              else if (valor < -20) clase = "piano";
+              else if (valor <= -15) clase = "variacion-rojo-4";
+              else if (valor <= -10) clase = "variacion-rojo-3";
+              else if (valor <= -5) clase = "variacion-rojo-2";
+              else if (valor < 0) clase = "variacion-rojo-1";
 
               const signo =
                 valor > 20
@@ -948,30 +873,17 @@
                   : "";
 
               return `
-                <div class="${claseBloque}">
+                <div class="${clase}">
                   ${label}: ${signo} ${Math.abs(valor).toFixed(1)}%
                   <small>Precio: $${valorOriginal ?? "-"}</small>
                 </div>
               `;
             };
 
-            // Asegúrate de que las variaciones aquí usen p.precio_hoy como base
             const bloqueHTML = `
-              ${bloqueVar(
-                "Variacion 1 semana",
-                variacion(p.precio_hoy, p.precio_7dias),
-                p.precio_7dias
-              )}
-              ${bloqueVar(
-                "Variación 2 semanas",
-                variacion(p.precio_hoy, p.precio_14dias),
-                p.precio_14dias
-              )}
-              ${bloqueVar(
-                "Variación 3 semanas",
-                variacion(p.precio_hoy, p.precio_21dias),
-                p.precio_21dias
-              )}
+             ${bloqueVar("Variacion 1 semana", variacion7, p.precio_7dias)}
+              ${bloqueVar("Variación 2 semanas", variacion14, p.precio_14dias)}
+              ${bloqueVar("Variación 3 semanas", variacion21, p.precio_21dias)}
               ${bloqueVar(
                 "Respecto a Nov/24",
                 variacionHist,
@@ -984,7 +896,7 @@
                 <div class="tarjeta-nombre">${p.nombre}</div>
                 <div class="tarjeta-precio-hoy">$${p.precio_hoy ?? "-"}</div>
               </div>
-              <div class="variacion ${claseTarjeta}">${varTexto} &mdash; Últ. 7 días</div>
+              <div class="variacion ${claseVar7}">${varTexto} &mdash; Últ. 7 días</div>
               <div class="tarjeta-precio-anterior">Anterior: $${
                 p.precio_7dias ?? "-"
               }</div>
