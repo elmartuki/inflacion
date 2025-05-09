@@ -748,7 +748,7 @@
           };
 
           function inflacionUltimoMes() {
-            const indicesAbril = [20, 21, 22, 23];
+            const indicesAbril = [23, 24, 25, 26];
             let total = 1;
             indicesAbril.forEach((i) => {
               total *= 1 + datosBase[i] / 100;
@@ -769,10 +769,7 @@
               "Variación 3 semanas",
               promedio(suma3, count3)
             )}
-            ${generarTarjetaPromedio(
-              "Inflación mensual (Abril)",
-              inflacionUltimoMes()
-            )}
+            ${generarTarjetaPromedio("Inflación mensual", inflacionUltimoMes())}
             ${generarTarjetaPromedio(
               "Respecto a Nov/24",
               promedio(sumaHist, countHist)
