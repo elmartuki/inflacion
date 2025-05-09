@@ -643,7 +643,9 @@
       <canvas id="inflacionChart"></canvas>
     </div>
 
-    <div id="contenedor-tarjetas"></div>
+    <div class="contenedor-padre">
+      <div id="contenedor-tarjetas"></div>
+    </div>
 
     <div id="modal" class="modal-overlay">
       <div class="modal-content">
@@ -1185,6 +1187,11 @@
 
       .tarjeta-mensual:hover {
         transform: scale(1.05);
+      }
+
+      .contenedor-padre {
+        width: 95%;
+        display: flex;
       }
     </style>
   </body>
