@@ -784,7 +784,7 @@
           };
 
           function inflacionUltimoMes() {
-            const indicesAbril = [25, 26, 27, 28];
+            const indicesAbril = [24, 25, 26, 27, 28];
             let total = 1;
             indicesAbril.forEach((i) => {
               total *= 1 + datosBase[i] / 100;
@@ -1010,7 +1010,6 @@
         "2° sem mar",
         "3° sem mar",
         "4° sem mar",
-        "5° sem mar",
         "1° sem abr",
         "2° sem abr",
         "3° sem abr",
@@ -1019,6 +1018,7 @@
         "2° sem may",
         "3° sem may",
         "4° sem may",
+        "5° sem may",
       ];
 
       function calcularInflacionAcumulada(datos) {
