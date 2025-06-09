@@ -341,56 +341,124 @@
       });
     </script>
 
-    <script>
-      async function cargarSemanas() {
-        const res = await fetch("https://veterinarialol.ddns.net:4000/semanas");
-        const semanas = await res.json();
-        const lista = document.getElementById("listaSemanas");
-        lista.innerHTML = "";
+    <!DOCTYPE html>
 
-        semanas.forEach((s) => {
-          const div = document.createElement("div");
-          div.style.margin = "0.5em 0";
-          div.innerHTML = `
-      <strong>${s.nombre}</strong>: ${s.porcentaje}% 
-      <button onclick="editarSemana(${s.id}, '${s.nombre}', ${s.porcentaje})">✏️</button>
-    `;
-          lista.appendChild(div);
-        });
-      }
+    <html lang="es">
+      <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Agregar o Editar Inflación Semanal</title>
+        <style>
+          body {
+            background-color: #121212;
+            color: #ffffff;
+            font-family: sans-serif;
+            padding: 2em;
+          }
+          .semana-card {
+            background: #1e1e1e;
+            padding: 1em;
+            border-radius: 10px;
+            margin-bottom: 1em;
+            display: flex;
+            gap: 0.5em;
+            align-items: center;
+          }
+          .semana-card input {
+            background: #2a2a2a;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 0.5em;
+            width: 180px;
+          }
+          .semana-card button {
+            border: none;
+            border-radius: 5px;
+            padding: 0.5em 1em;
+            cursor: pointer;
+            font-size: 1em;
+          }
+          .semana-card button.edit {
+            background: #03dac6;
+            color: #000;
+          }
+          .semana-card button.save {
+            background: #00bfa5;
+            color: #000;
+            display: none;
+          }
+        </style>
+      </head>
+      <body>
+        <h1>Inflación Semanal</h1>
+        <div id="listaSemanas"></div>
 
-      function editarSemana(id, nombre, porcentaje) {
-        document.getElementById("semana_id").value = id;
-        document.getElementById("semana_nombre").value = nombre;
-        document.getElementById("semana_porcentaje").value = porcentaje;
-      }
+        ```
+        <script>
+          // Función para cargar y renderizar semanas con edición inline
+          async function cargarSemanas() {
+            const res = await fetch(
+              "https://veterinarialol.ddns.net:4000/semanas"
+            );
+            const semanas = await res.json();
+            const cont = document.getElementById("listaSemanas");
+            cont.innerHTML = "";
 
-      document
-        .getElementById("formSemana")
-        .addEventListener("submit", async (e) => {
-          e.preventDefault();
-          const id = document.getElementById("semana_id").value;
-          const nombre = document.getElementById("semana_nombre").value;
-          const porcentaje = parseFloat(
-            document.getElementById("semana_porcentaje").value
-          );
+            semanas.forEach((s) => {
+              const card = document.createElement("div");
+              card.className = "semana-card";
+              card.innerHTML = `
+        <input type="text" value="${s.nombre}" disabled />
+        <input type="number" step="0.01" value="${s.porcentaje}" disabled />
+        <button class="edit">✏️</button>
+        <button class="save">💾</button>
+      `;
 
-          const metodo = id ? "PUT" : "POST";
-          const url = id
-            ? `https://veterinarialol.ddns.net:4000/semanas/${id}`
-            : `https://veterinarialol.ddns.net:4000/semanas`;
+              const [inputNombre, inputPct] = card.querySelectorAll("input");
+              const btnEdit = card.querySelector("button.edit");
+              const btnSave = card.querySelector("button.save");
 
-          await fetch(url, {
-            method: metodo,
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ nombre, porcentaje }),
-          });
+              btnEdit.addEventListener("click", () => {
+                inputNombre.disabled = false;
+                inputPct.disabled = false;
+                btnEdit.style.display = "none";
+                btnSave.style.display = "inline-block";
+                inputNombre.focus();
+              });
 
-          document.getElementById("formSemana").reset();
+              btnSave.addEventListener("click", async () => {
+                const nombre = inputNombre.value.trim();
+                const porcentaje = parseFloat(inputPct.value);
+                try {
+                  await fetch(
+                    `https://veterinarialol.ddns.net:4000/semanas/${s.id}`,
+                    {
+                      method: "PUT",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ nombre, porcentaje }),
+                    }
+                  );
+                  inputNombre.disabled = true;
+                  inputPct.disabled = true;
+                  btnEdit.style.display = "inline-block";
+                  btnSave.style.display = "none";
+                  alert("Semana actualizada");
+                } catch (e) {
+                  console.error(e);
+                  alert("Error al actualizar la semana");
+                }
+              });
+
+              cont.appendChild(card);
+            });
+          }
+
+          // Inicializa
           cargarSemanas();
-        });
-
-      cargarSemanas();
-    </script>
+        </script>
+        ```
+      </body>
+    </html>
   </body>
 </html>
