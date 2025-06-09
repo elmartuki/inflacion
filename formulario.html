@@ -53,6 +53,67 @@
     </style>
   </head>
   <body>
+    <!-- ➕ Agregar Producto -->
+    <button
+      id="btnAgregarProducto"
+      style="
+        display: block;
+        margin: 1em auto;
+        padding: 0.5em 1em;
+        background: #03dac6;
+        color: #000;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+      "
+    >
+      ➕ Agregar Producto
+    </button>
+
+    <form
+      id="formAgregarProducto"
+      style="
+        display: none;
+        flex-direction: column;
+        gap: 0.5em;
+        max-width: 400px;
+        margin: 1em auto;
+        padding: 1em;
+        background: #1e1e1e;
+        border-radius: 8px;
+      "
+    >
+      <input
+        type="text"
+        id="nombreProd"
+        placeholder="Nombre del producto"
+        required
+      />
+      <input
+        type="number"
+        id="precioHoyProd"
+        placeholder="Precio Hoy"
+        required
+      />
+      <input type="number" id="precio7Prod" placeholder="Precio 7 días" />
+      <input type="number" id="precio14Prod" placeholder="Precio 14 días" />
+      <input type="number" id="precio21Prod" placeholder="Precio 21 días" />
+      <input type="number" id="precioHistProd" placeholder="Precio Histórico" />
+      <button
+        type="submit"
+        style="
+          background: #03dac6;
+          color: #000;
+          padding: 0.5em;
+          border: none;
+          border-radius: 5px;
+          cursor: pointer;
+        "
+      >
+        Guardar Producto
+      </button>
+    </form>
+
     <form id="formProducto" style="display: none">
       <input type="hidden" id="id" />
 
@@ -304,6 +365,51 @@
           console.error("Error al eliminar producto:", error);
         }
       }
+
+      // 1) Mostrar/ocultar el form
+      const btnAdd = document.getElementById("btnAgregarProducto");
+      const formAdd = document.getElementById("formAgregarProducto");
+
+      btnAdd.addEventListener("click", () => {
+        formAdd.style.display =
+          formAdd.style.display === "flex" ? "none" : "flex";
+      });
+
+      // 2) Enviar nuevo producto
+      formAdd.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const datos = {
+          nombre: document.getElementById("nombreProd").value,
+          precio_hoy: parseFloat(
+            document.getElementById("precioHoyProd").value
+          ),
+          precio_7dias:
+            parseFloat(document.getElementById("precio7Prod").value) || null,
+          precio_14dias:
+            parseFloat(document.getElementById("precio14Prod").value) || null,
+          precio_21dias:
+            parseFloat(document.getElementById("precio21Prod").value) || null,
+          precio_historico:
+            parseFloat(document.getElementById("precioHistProd").value) || null,
+        };
+
+        try {
+          const res = await fetch(
+            "https://veterinarialol.ddns.net:4000/inflacion",
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(datos),
+            }
+          );
+          if (!res.ok) throw new Error(await res.text());
+          alert("✅ Producto agregado correctamente");
+          window.location.reload();
+        } catch (err) {
+          console.error("Error al agregar producto", err);
+          alert("❌ No se pudo agregar el producto");
+        }
+      });
 
       cargarListaProductos();
     </script>
