@@ -980,45 +980,24 @@
     <!-- Chart.js desde CDN -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-      // 1) Datos base
-      const datosBase = [
-        -1.4, -0.15, -0.55, -0.77, 0.57, 4, 4.21, -0.01, 0.5, 0.3, 0.1, 0.2,
-        2.92, -3.89, -0.47, -1.2, 6.5, -2.43, 6.24, -3.6, 1.28, 0.62, 4.57,
-        -2.02, 1.76, -4.25, 3.01, -1.87, 0.63, -2.92, 4.99,
-      ];
-      const semanasBase = [
-        "1° sem nov",
-        "2° sem nov",
-        "3° sem nov",
-        "4° sem nov",
-        "1° sem dic",
-        "2° sem dic",
-        "3° sem dic",
-        "4° sem dic",
-        "1° sem ene",
-        "2° sem ene",
-        "3° sem ene",
-        "4° sem ene",
-        "1° sem feb",
-        "2° sem feb",
-        "3° sem feb",
-        "4° sem feb",
-        "1° sem mar",
-        "2° sem mar",
-        "3° sem mar",
-        "4° sem mar",
-        "1° sem abr",
-        "2° sem abr",
-        "3° sem abr",
-        "4° sem abr",
-        "1° sem may",
-        "2° sem may",
-        "3° sem may",
-        "4° sem may",
-        "5° sem may",
-        "1° sem jun",
-        "2° sem jun",
-      ];
+      let datosBase, semanasBase, inflacionChart;
+
+      async function inicializarChart() {
+        try {
+          const res = await fetch(
+            "https://veterinarialol.ddns.net:4000/config"
+          );
+          const cfg = await res.json();
+          datosBase = cfg.datosBase;
+          semanasBase = cfg.semanasBase;
+          inflacionChart = crearChart(); // tu función que arma el Chart.js
+        } catch (err) {
+          console.error("Error al cargar configuración de gráfico:", err);
+        }
+      }
+
+      // Arranca todo
+      inicializarChart();
 
       // 2) Acumulada
       function calcularInflacionAcumulada(datos) {

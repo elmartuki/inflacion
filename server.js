@@ -248,6 +248,28 @@ app.get("/logout", (req, res) => {
   });
 });
 
+// Ruta al config.json
+const CONFIG_PATH = path.join(__dirname, 'config.json');
+
+// GET /config → devuelve { datosBase, semanasBase }
+app.get('/config', (req, res) => {
+  fs.readFile(CONFIG_PATH, 'utf8', (err, data) => {
+    if (err) return res.status(500).send('Error leyendo config');
+    res.json(JSON.parse(data));
+  });
+});
+
+// POST /config → recibe { datosBase, semanasBase } y lo sobreescribe
+app.post('/config', (req, res) => {
+  const { datosBase, semanasBase } = req.body;
+  const nuevaConfig = { datosBase, semanasBase };
+  fs.writeFile(CONFIG_PATH, JSON.stringify(nuevaConfig, null, 2), err => {
+    if (err) return res.status(500).send('Error guardando config');
+    res.send('Configuración actualizada correctamente');
+  });
+});
+
+
 
 https.createServer(opcionesSSL, app).listen(4000, '0.0.0.0', () => {
     console.log('Servidor HTTPS corriendo en https://veterinarialol.ddns.net:4000');
