@@ -980,176 +980,179 @@
     <!-- Chart.js desde CDN -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-      let datosBase, semanasBase, inflacionChart;
+      document.addEventListener("DOMContentLoaded", () => {
+        // Variables que usaremos
+        let datosBase = [],
+          semanasBase = [],
+          inflacionChart,
+          ctx,
+          gradientAcum;
 
-      async function inicializarChart() {
-        try {
-          const res = await fetch(
-            "https://veterinarialol.ddns.net:4000/config"
+        // 1) Función que carga la config y luego arranca el chart
+        async function inicializarChart() {
+          try {
+            const res = await fetch(
+              "http://veterinarialol.ddns.net:4000/config"
+            );
+            const cfg = await res.json();
+            datosBase = cfg.datosBase;
+            semanasBase = cfg.semanasBase;
+
+            // una vez que tenemos los datos, inicializamos el canvas
+            const canvas = document.getElementById("inflacionChart");
+            ctx = canvas.getContext("2d");
+
+            // gradiente (ahora que ctx ya existe)
+            gradientAcum = ctx.createLinearGradient(0, 0, 0, 400);
+            gradientAcum.addColorStop(0, "rgba(0,255,0,0.2)");
+            gradientAcum.addColorStop(1, "rgba(0,255,0,0)");
+
+            // y creamos el chart por primera vez
+            crearChart();
+          } catch (err) {
+            console.error("Error al cargar configuración de gráfico:", err);
+          }
+        }
+
+        // 2) Lógica acumulada
+        function calcularInflacionAcumulada(datos) {
+          let acumulada = [],
+            total = 1;
+          for (let i = 0; i < datos.length; i++) {
+            total *= 1 + datos[i] / 100;
+            acumulada.push(+((total - 1) * 100).toFixed(2));
+          }
+          return acumulada;
+        }
+
+        // 3) Estado global de representación
+        let modo = "acum"; // 'acum' o 'var'
+
+        // 4) Generador de colores para barras
+        function generarColoresBarras(datos) {
+          return datos.map((_, i) =>
+            i === datosBase.length - 1 ? "orange" : "#3366cc"
           );
-          const cfg = await res.json();
-          datosBase = cfg.datosBase;
-          semanasBase = cfg.semanasBase;
-          inflacionChart = crearChart(); // tu función que arma el Chart.js
-        } catch (err) {
-          console.error("Error al cargar configuración de gráfico:", err);
         }
-      }
 
-      // Arranca todo
-      inicializarChart();
+        // 5) Función que (re)crea el chart según el modo actual
+        function crearChart() {
+          // si ya había uno lo destruimos
+          if (inflacionChart) inflacionChart.destroy();
 
-      // 2) Acumulada
-      function calcularInflacionAcumulada(datos) {
-        let acumulada = [],
-          total = 1;
-        for (let i = 0; i < datos.length; i++) {
-          total *= 1 + datos[i] / 100;
-          acumulada.push(+((total - 1) * 100).toFixed(2));
-        }
-        return acumulada;
-      }
-
-      // 3) Variables globales para el chart
-      const ctx = document.getElementById("inflacionChart").getContext("2d");
-      let modo = "acum"; // 'acum' o 'var'
-      let inflacionChart;
-
-      // Gradiente para el área de la línea
-      const gradientAcum = ctx.createLinearGradient(0, 0, 0, 400);
-      gradientAcum.addColorStop(0, "rgba(0,255,0,0.2)");
-      gradientAcum.addColorStop(1, "rgba(0,255,0,0)");
-
-      // Genera array de colores para barras
-      function generarColoresBarras(datos) {
-        return datos.map(
-          (_, i) =>
-            i === datosBase.length - 1
-              ? "orange" // última barra en naranja
-              : "#3366cc" // el resto en azul
-        );
-      }
-
-      // 4) Crea un nuevo chart según el modo actual
-      function crearChart() {
-        const data =
-          modo === "acum"
-            ? {
-                labels: semanasBase,
-                datasets: [
-                  {
-                    label: "Inflación Acumulada",
-                    data: calcularInflacionAcumulada(datosBase),
-                    backgroundColor: gradientAcum,
-                    fill: true,
-                    tension: 0.4,
-                    pointRadius: 4,
-                    pointHoverRadius: 7,
-                    pointHitRadius: 15,
-                    pointBackgroundColor: "#00ff80",
-                    borderWidth: 2,
-                    segment: {
-                      borderColor: (ctx) => {
-                        const y0 = ctx.p0.parsed.y,
-                          y1 = ctx.p1.parsed.y;
-                        return y1 < y0 ? "#ff4d4d" : "#00ff80";
+          const config = {
+            type: modo === "acum" ? "line" : "bar",
+            data:
+              modo === "acum"
+                ? {
+                    labels: semanasBase,
+                    datasets: [
+                      {
+                        label: "Inflación Acumulada",
+                        data: calcularInflacionAcumulada(datosBase),
+                        backgroundColor: gradientAcum,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 4,
+                        pointHoverRadius: 7,
+                        pointHitRadius: 15,
+                        pointBackgroundColor: "#00ff80",
+                        borderWidth: 2,
+                        segment: {
+                          borderColor: (ctx) => {
+                            return ctx.p1.parsed.y < ctx.p0.parsed.y
+                              ? "#ff4d4d"
+                              : "#00ff80";
+                          },
+                        },
                       },
-                    },
+                    ],
+                  }
+                : {
+                    labels: semanasBase,
+                    datasets: [
+                      {
+                        label: "Variación Semanal",
+                        data: datosBase,
+                        backgroundColor: generarColoresBarras(datosBase),
+                        borderWidth: 0,
+                      },
+                    ],
                   },
-                ],
-              }
-            : {
-                labels: semanasBase,
-                datasets: [
-                  {
-                    label: "Variación Semanal",
-                    data: datosBase,
-                    backgroundColor: generarColoresBarras(datosBase),
-                    borderWidth: 0,
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: { display: false },
+                tooltip: {
+                  callbacks: {
+                    label: (ctx) =>
+                      modo === "acum"
+                        ? `Inflación Acumulada: ${ctx.raw}%`
+                        : `Variación Semanal: ${ctx.raw}%`,
                   },
-                ],
-              };
+                },
+              },
+              scales: {
+                x: {
+                  grid: { display: false },
+                  ticks: { color: "#888", maxRotation: 0, font: { size: 10 } },
+                },
+                y: {
+                  grid: { color: "rgba(0,0,0,0.1)" },
+                  ticks: {
+                    color: "#888",
+                    callback: (v) => `${v}%`,
+                  },
+                },
+              },
+            },
+          };
 
-        const config = {
-          type: modo === "acum" ? "line" : "bar",
-          data: data,
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-              legend: { display: false },
-              tooltip: {
-                callbacks: {
-                  label: (ctx) =>
-                    modo === "acum"
-                      ? `Inflación Acumulada: ${ctx.raw}%`
-                      : `Variación Semanal: ${ctx.raw}%`,
-                },
-              },
-            },
-            scales: {
-              x: {
-                grid: { display: false },
-                ticks: { color: "#888", maxRotation: 0, font: { size: 10 } },
-              },
-              y: {
-                grid: { color: "rgba(0,0,0,0.1)" },
-                ticks: {
-                  color: "#888",
-                  callback: (v) => `${v}%`,
-                },
-              },
-            },
-          },
+          inflacionChart = new Chart(ctx, config);
+        }
+
+        // 6) Botones de interacción
+        document
+          .getElementById("mostrarGraficoBtn")
+          .addEventListener("click", () => {
+            const c = document.getElementById("contenedorGrafico");
+            c.style.display = c.style.display === "none" ? "block" : "none";
+          });
+
+        document
+          .getElementById("toggleRepresentacionBtn")
+          .addEventListener("click", function () {
+            modo = modo === "acum" ? "var" : "acum";
+            this.textContent =
+              modo === "acum"
+                ? "Ver Variación Semanal"
+                : "Ver Inflación Acumulada";
+            crearChart();
+          });
+
+        // 7) Función de filtrado de semanas
+        window.filtrarSemanas = function (cantidad) {
+          const total = datosBase.length;
+          const desde = cantidad ? Math.max(total - cantidad, 0) : 0;
+          const datosF = datosBase.slice(desde);
+          const semF = semanasBase.slice(desde);
+
+          inflacionChart.data.labels = semF;
+          if (modo === "acum") {
+            inflacionChart.data.datasets[0].data =
+              calcularInflacionAcumulada(datosF);
+          } else {
+            inflacionChart.data.datasets[0].data = datosF;
+            inflacionChart.data.datasets[0].backgroundColor =
+              generarColoresBarras(datosF);
+          }
+          inflacionChart.update();
         };
 
-        return new Chart(ctx, config);
-      }
-
-      // 5) Arranca como línea acumulada
-      inflacionChart = crearChart();
-
-      // 6) Botón mostrar/ocultar
-      document
-        .getElementById("mostrarGraficoBtn")
-        .addEventListener("click", () => {
-          const c = document.getElementById("contenedorGrafico");
-          c.style.display = c.style.display === "none" ? "block" : "none";
-        });
-
-      // 7) Botón alternar representación
-      document
-        .getElementById("toggleRepresentacionBtn")
-        .addEventListener("click", function () {
-          inflacionChart.destroy();
-          modo = modo === "acum" ? "var" : "acum";
-          this.textContent =
-            modo === "acum"
-              ? "Ver Variación Semanal"
-              : "Ver Inflación Acumulada";
-          inflacionChart = crearChart();
-        });
-
-      // 8) Filtrado de semanas (funciona para ambos modos)
-      function filtrarSemanas(cantidad) {
-        const total = datosBase.length;
-        const desde = cantidad ? Math.max(total - cantidad, 0) : 0;
-        const datosFiltrados = datosBase.slice(desde);
-        const etiquetasFiltradas = semanasBase.slice(desde);
-
-        inflacionChart.data.labels = etiquetasFiltradas;
-
-        if (modo === "acum") {
-          inflacionChart.data.datasets[0].data =
-            calcularInflacionAcumulada(datosFiltrados);
-        } else {
-          inflacionChart.data.datasets[0].data = datosFiltrados;
-          inflacionChart.data.datasets[0].backgroundColor =
-            generarColoresBarras(datosFiltrados).slice(0);
-        }
-
-        inflacionChart.update();
-      }
+        // 8) Arrancamos todo
+        inicializarChart();
+      });
     </script>
 
     <style>
