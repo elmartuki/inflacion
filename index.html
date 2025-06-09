@@ -42,486 +42,6 @@
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-    <script>
-      async function cargarTarjetas() {
-        try {
-          const res = await fetch(
-            "https://veterinarialol.ddns.net:4000/inflacion"
-          );
-          const datos = await res.json();
-
-          const contenedor = document.getElementById("contenedor-tarjetas");
-          const divPromedios = document.getElementById("promedios");
-          const modal = document.getElementById("modal");
-          const modalContenido = document.getElementById(
-            "modal-contenido-interno"
-          );
-          const modalCerrar = document.getElementById("modal-cerrar");
-
-          modalCerrar.addEventListener("click", () => {
-            modal.style.display = "none";
-            modalContenido.innerHTML = "";
-          });
-
-          let suma1 = 0,
-            suma2 = 0,
-            suma3 = 0,
-            sumaHist = 0;
-          let count1 = 0,
-            count2 = 0,
-            count3 = 0,
-            countHist = 0;
-
-          const variacion = (a, b) =>
-            a && b && b !== 0 ? ((a - b) / b) * 100 : null;
-
-          datos.forEach((p) => {
-            const v1 = variacion(p.precio_hoy, p.precio_7dias);
-            const v2 = variacion(p.precio_7dias, p.precio_14dias);
-            const v3 = variacion(p.precio_14dias, p.precio_21dias);
-            const vh = variacion(p.precio_hoy, p.precio_historico);
-            if (v1 !== null) {
-              suma1 += v1;
-              count1++;
-            }
-            if (v2 !== null) {
-              suma2 += v2;
-              count2++;
-            }
-            if (v3 !== null) {
-              suma3 += v3;
-              count3++;
-            }
-            if (vh !== null) {
-              sumaHist += vh;
-              countHist++;
-            }
-          });
-
-          const promedio = (suma, count) => (count ? suma / count : null);
-
-          const generarTarjetaPromedio = (titulo, valor) => {
-            let clase = "";
-            if (valor > 20) {
-              clase = "fuego rebote-fuego";
-            } else if (valor >= 15) {
-              clase = "variacion-verde-4";
-            } else if (valor >= 10) {
-              clase = "variacion-verde-3";
-            } else if (valor >= 5) {
-              clase = "variacion-verde-2";
-            } else if (valor > 0) {
-              clase = "variacion-verde-1";
-            } else if (valor < -20) {
-              clase = "piano rebote-piano";
-            } else if (valor <= -15) {
-              clase = "variacion-rojo-4";
-            } else if (valor <= -10) {
-              clase = "variacion-rojo-3";
-            } else if (valor <= -5) {
-              clase = "variacion-rojo-2";
-            } else if (valor < 0) {
-              clase = "variacion-rojo-1";
-            }
-
-            const signo = valor > 0 ? "▲" : valor < 0 ? "▼" : "";
-            const contenido =
-              valor !== null
-                ? `${signo} ${Math.abs(valor).toFixed(2)}%`
-                : "N/D";
-            return `
-              <div class="tarjeta ${clase}" style="flex: 1; min-width: 200px;">
-                <div class="tarjeta-nombre">${titulo}</div>
-                <div class="tarjeta-precio-hoy">${contenido}</div>
-              </div>
-            `;
-          };
-
-          function inflacionUltimoMes() {
-            const indicesAbril = [27, 28 ,29, 30];
-            let total = 1;
-            indicesAbril.forEach((i) => {
-              total *= 1 + datosBase[i] / 100;
-            });
-            return ((total - 1) * 100).toFixed(2);
-          }
-
-          divPromedios.innerHTML = `
-            ${generarTarjetaPromedio(
-              "Variación 1 semana",
-              promedio(suma1, count1)
-            )}
-            ${generarTarjetaPromedio(
-              "Variación 2 semanas",
-              promedio(suma2, count2)
-            )}
-            ${generarTarjetaPromedio(
-              "Variación 3 semanas",
-              promedio(suma3, count3)
-            )}
-            ${generarTarjetaPromedio(
-              "Inflación intermensual",
-              inflacionUltimoMes()
-            )}
-            ${generarTarjetaPromedio(
-              "Respecto a Nov/24",
-              promedio(sumaHist, countHist)
-            )}
-          `;
-
-          datos.forEach((p) => {
-            const variacion7 = variacion(p.precio_hoy, p.precio_7dias);
-            const variacion14 = variacion(p.precio_7dias, p.precio_14dias);
-            const variacion21 = variacion(p.precio_14dias, p.precio_21dias);
-            const variacionHist = variacion(p.precio_hoy, p.precio_historico);
-
-            let claseVar7 = "";
-            let claseTarjeta = "";
-
-            if (variacion7 > 20) {
-              claseTarjeta = "fuego-total";
-            } else if (variacion7 >= 15) {
-              claseTarjeta = "variacion-verde-4";
-            } else if (variacion7 >= 10) {
-              claseTarjeta = "variacion-verde-3";
-            } else if (variacion7 >= 5) {
-              claseTarjeta = "variacion-verde-2";
-            } else if (variacion7 > 0) {
-              claseTarjeta = "variacion-verde-1";
-            } else if (variacion7 < -20) {
-              claseTarjeta = "piano-total";
-            } else if (variacion7 <= -15) {
-              claseTarjeta = "variacion-rojo-4";
-            } else if (variacion7 <= -10) {
-              claseTarjeta = "variacion-rojo-3";
-            } else if (variacion7 <= -5) {
-              claseTarjeta = "variacion-rojo-2";
-            } else if (variacion7 < 0) {
-              claseTarjeta = "variacion-rojo-1";
-            }
-
-            const tarjeta = document.createElement("div");
-            tarjeta.className = `tarjeta ${claseTarjeta}`;
-
-            const varTexto =
-              variacion7 !== null
-                ? variacion7 > 20
-                  ? `🔥 ▲ ${variacion7.toFixed(1)}%`
-                  : variacion7 < -20
-                  ? `🎹 ▼ ${Math.abs(variacion7).toFixed(1)}%`
-                  : variacion7 > 0
-                  ? `⬆️ ${variacion7.toFixed(1)}%`
-                  : variacion7 < 0
-                  ? `⬇️ ${Math.abs(variacion7).toFixed(1)}%`
-                  : `0.0%`
-                : "-";
-
-            const bloqueVar = (label, valor, valorOriginal) => {
-              if (valor === null) {
-                return `
-      <div class="${clase} variacion-sin-cambio">
-        ${label}: -<br>
-        <small>Precio: $${valorOriginal ?? "-"}</small>
-      </div>`;
-              }
-
-              if (valor === 0) {
-                return `
-      <div class="variacion-sin-cambio">
-        ${label}: 0.0%<br>
-        <small>Precio: $${valorOriginal ?? "-"}</small>
-      </div>`;
-              }
-              if (valor === null) return `<div>${label}: -</div>`;
-
-              let clase = "";
-              if (valor > 20) clase = "fuego";
-              else if (valor >= 15) clase = "variacion-verde-4";
-              else if (valor >= 10) clase = "variacion-verde-3";
-              else if (valor >= 5) clase = "variacion-verde-2";
-              else if (valor > 0) clase = "variacion-verde-1";
-              else if (valor < -20) clase = "piano";
-              else if (valor <= -15) clase = "variacion-rojo-4";
-              else if (valor <= -10) clase = "variacion-rojo-3";
-              else if (valor <= -5) clase = "variacion-rojo-2";
-              else if (valor < 0) clase = "variacion-rojo-1";
-
-              const signo =
-                valor > 20
-                  ? `🔥 ▲`
-                  : valor < -20
-                  ? `🎹 ▼`
-                  : valor > 0
-                  ? `▲`
-                  : valor < 0
-                  ? `▼`
-                  : "";
-
-              return `
-                <div class="${clase}">
-                  ${label}: ${signo} ${Math.abs(valor).toFixed(1)}%
-                  <small>Precio: $${valorOriginal ?? "-"}</small>
-                </div>
-              `;
-            };
-
-            const bloqueHTML = `
-             ${bloqueVar("Variacion 1 semana", variacion7, p.precio_7dias)}
-              ${bloqueVar("Variación 2 semanas", variacion14, p.precio_14dias)}
-              ${bloqueVar("Variación 3 semanas", variacion21, p.precio_21dias)}
-              ${bloqueVar(
-                "Respecto a Nov/24",
-                variacionHist,
-                p.precio_historico
-              )}
-            `;
-
-            tarjeta.innerHTML = `
-              <div class="tarjeta-header">
-                <div class="tarjeta-nombre">${p.nombre}</div>
-                <div class="tarjeta-precio-hoy">$${p.precio_hoy ?? "-"}</div>
-              </div>
-              <div class="variacion ${claseVar7}">${varTexto} &mdash; Últ. 7 días</div>
-              <div class="tarjeta-precio-anterior">Anterior: $${
-                p.precio_7dias ?? "-"
-              }</div>
-            `;
-
-            window.addEventListener("click", (e) => {
-              const modal = document.getElementById("modal");
-              if (e.target === modal) {
-                modal.style.display = "none";
-                const modalContenido = document.getElementById(
-                  "modal-contenido-interno"
-                );
-                if (modalContenido) modalContenido.innerHTML = "";
-              }
-            });
-
-            tarjeta.addEventListener("click", () => {
-              const isMobile = window.innerWidth <= 768;
-              if (isMobile) {
-                let cont = tarjeta.querySelector(".bloque-var");
-                if (!cont) {
-                  cont = document.createElement("div");
-                  cont.className = "bloque-var";
-                  cont.innerHTML = bloqueHTML;
-                  tarjeta.appendChild(cont);
-                }
-                cont.style.display =
-                  cont.style.display === "flex" ? "none" : "flex";
-              } else {
-                modalContenido.innerHTML = `<h3>${p.nombre}</h3>` + bloqueHTML;
-                modal.style.display = "flex";
-              }
-            });
-
-            contenedor.appendChild(tarjeta);
-          });
-        } catch (err) {
-          console.error("Error al cargar productos:", err);
-        }
-      }
-
-      cargarTarjetas();
-    </script>
-
-    <!-- Chart.js desde CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script>
-      // 1) Datos base
-      const datosBase = [
-        -1.4, -0.15, -0.55, -0.77, 0.57, 4, 4.21, -0.01, 0.5, 0.3, 0.1, 0.2,
-        2.92, -3.89, -0.47, -1.2, 6.5, -2.43, 6.24, -3.6, 1.28, 0.62, 4.57,
-        -2.02, 1.76, -4.25, 3.01, -1.87, 0.63, -2.92, 4.99,
-      ];
-      const semanasBase = [
-        "1° sem nov",
-        "2° sem nov",
-        "3° sem nov",
-        "4° sem nov",
-        "1° sem dic",
-        "2° sem dic",
-        "3° sem dic",
-        "4° sem dic",
-        "1° sem ene",
-        "2° sem ene",
-        "3° sem ene",
-        "4° sem ene",
-        "1° sem feb",
-        "2° sem feb",
-        "3° sem feb",
-        "4° sem feb",
-        "1° sem mar",
-        "2° sem mar",
-        "3° sem mar",
-        "4° sem mar",
-        "1° sem abr",
-        "2° sem abr",
-        "3° sem abr",
-        "4° sem abr",
-        "1° sem may",
-        "2° sem may",
-        "3° sem may",
-        "4° sem may",
-        "5° sem may",
-        "1° sem jun",
-        "2° sem jun",
-      ];
-
-      // 2) Acumulada
-      function calcularInflacionAcumulada(datos) {
-        let acumulada = [],
-          total = 1;
-        for (let i = 0; i < datos.length; i++) {
-          total *= 1 + datos[i] / 100;
-          acumulada.push(+((total - 1) * 100).toFixed(2));
-        }
-        return acumulada;
-      }
-
-      // 3) Variables globales para el chart
-      const ctx = document.getElementById("inflacionChart").getContext("2d");
-      let modo = "acum"; // 'acum' o 'var'
-      let inflacionChart;
-
-      // Gradiente para el área de la línea
-      const gradientAcum = ctx.createLinearGradient(0, 0, 0, 400);
-      gradientAcum.addColorStop(0, "rgba(0,255,0,0.2)");
-      gradientAcum.addColorStop(1, "rgba(0,255,0,0)");
-
-      // Genera array de colores para barras
-      function generarColoresBarras(datos) {
-        return datos.map(
-          (_, i) =>
-            i === datosBase.length - 1
-              ? "orange" // última barra en naranja
-              : "#3366cc" // el resto en azul
-        );
-      }
-
-      // 4) Crea un nuevo chart según el modo actual
-      function crearChart() {
-        const data =
-          modo === "acum"
-            ? {
-                labels: semanasBase,
-                datasets: [
-                  {
-                    label: "Inflación Acumulada",
-                    data: calcularInflacionAcumulada(datosBase),
-                    backgroundColor: gradientAcum,
-                    fill: true,
-                    tension: 0.4,
-                    pointRadius: 4,
-                    pointHoverRadius: 7,
-                    pointHitRadius: 15,
-                    pointBackgroundColor: "#00ff80",
-                    borderWidth: 2,
-                    segment: {
-                      borderColor: (ctx) => {
-                        const y0 = ctx.p0.parsed.y,
-                          y1 = ctx.p1.parsed.y;
-                        return y1 < y0 ? "#ff4d4d" : "#00ff80";
-                      },
-                    },
-                  },
-                ],
-              }
-            : {
-                labels: semanasBase,
-                datasets: [
-                  {
-                    label: "Variación Semanal",
-                    data: datosBase,
-                    backgroundColor: generarColoresBarras(datosBase),
-                    borderWidth: 0,
-                  },
-                ],
-              };
-
-        const config = {
-          type: modo === "acum" ? "line" : "bar",
-          data: data,
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-              legend: { display: false },
-              tooltip: {
-                callbacks: {
-                  label: (ctx) =>
-                    modo === "acum"
-                      ? `Inflación Acumulada: ${ctx.raw}%`
-                      : `Variación Semanal: ${ctx.raw}%`,
-                },
-              },
-            },
-            scales: {
-              x: {
-                grid: { display: false },
-                ticks: { color: "#888", maxRotation: 0, font: { size: 10 } },
-              },
-              y: {
-                grid: { color: "rgba(0,0,0,0.1)" },
-                ticks: {
-                  color: "#888",
-                  callback: (v) => `${v}%`,
-                },
-              },
-            },
-          },
-        };
-
-        return new Chart(ctx, config);
-      }
-
-      // 5) Arranca como línea acumulada
-      inflacionChart = crearChart();
-
-      // 6) Botón mostrar/ocultar
-      document
-        .getElementById("mostrarGraficoBtn")
-        .addEventListener("click", () => {
-          const c = document.getElementById("contenedorGrafico");
-          c.style.display = c.style.display === "none" ? "block" : "none";
-        });
-
-      // 7) Botón alternar representación
-      document
-        .getElementById("toggleRepresentacionBtn")
-        .addEventListener("click", function () {
-          inflacionChart.destroy();
-          modo = modo === "acum" ? "var" : "acum";
-          this.textContent =
-            modo === "acum"
-              ? "Ver Variación Semanal"
-              : "Ver Inflación Acumulada";
-          inflacionChart = crearChart();
-        });
-
-      // 8) Filtrado de semanas (funciona para ambos modos)
-      function filtrarSemanas(cantidad) {
-        const total = datosBase.length;
-        const desde = cantidad ? Math.max(total - cantidad, 0) : 0;
-        const datosFiltrados = datosBase.slice(desde);
-        const etiquetasFiltradas = semanasBase.slice(desde);
-
-        inflacionChart.data.labels = etiquetasFiltradas;
-
-        if (modo === "acum") {
-          inflacionChart.data.datasets[0].data =
-            calcularInflacionAcumulada(datosFiltrados);
-        } else {
-          inflacionChart.data.datasets[0].data = datosFiltrados;
-          inflacionChart.data.datasets[0].backgroundColor =
-            generarColoresBarras(datosFiltrados).slice(0);
-        }
-
-        inflacionChart.update();
-      }
-    </script>
-
     <style>
       body {
         background-color: #121212;
@@ -1173,7 +693,483 @@
       </div>
     </div>
 
-    
+    <script>
+      async function cargarTarjetas() {
+        try {
+          const res = await fetch(
+            "https://veterinarialol.ddns.net:4000/inflacion"
+          );
+          const datos = await res.json();
+
+          const contenedor = document.getElementById("contenedor-tarjetas");
+          const divPromedios = document.getElementById("promedios");
+          const modal = document.getElementById("modal");
+          const modalContenido = document.getElementById(
+            "modal-contenido-interno"
+          );
+          const modalCerrar = document.getElementById("modal-cerrar");
+
+          modalCerrar.addEventListener("click", () => {
+            modal.style.display = "none";
+            modalContenido.innerHTML = "";
+          });
+
+          let suma1 = 0,
+            suma2 = 0,
+            suma3 = 0,
+            sumaHist = 0;
+          let count1 = 0,
+            count2 = 0,
+            count3 = 0,
+            countHist = 0;
+
+          const variacion = (a, b) =>
+            a && b && b !== 0 ? ((a - b) / b) * 100 : null;
+
+          datos.forEach((p) => {
+            const v1 = variacion(p.precio_hoy, p.precio_7dias);
+            const v2 = variacion(p.precio_7dias, p.precio_14dias);
+            const v3 = variacion(p.precio_14dias, p.precio_21dias);
+            const vh = variacion(p.precio_hoy, p.precio_historico);
+            if (v1 !== null) {
+              suma1 += v1;
+              count1++;
+            }
+            if (v2 !== null) {
+              suma2 += v2;
+              count2++;
+            }
+            if (v3 !== null) {
+              suma3 += v3;
+              count3++;
+            }
+            if (vh !== null) {
+              sumaHist += vh;
+              countHist++;
+            }
+          });
+
+          const promedio = (suma, count) => (count ? suma / count : null);
+
+          const generarTarjetaPromedio = (titulo, valor) => {
+            let clase = "";
+            if (valor > 20) {
+              clase = "fuego rebote-fuego";
+            } else if (valor >= 15) {
+              clase = "variacion-verde-4";
+            } else if (valor >= 10) {
+              clase = "variacion-verde-3";
+            } else if (valor >= 5) {
+              clase = "variacion-verde-2";
+            } else if (valor > 0) {
+              clase = "variacion-verde-1";
+            } else if (valor < -20) {
+              clase = "piano rebote-piano";
+            } else if (valor <= -15) {
+              clase = "variacion-rojo-4";
+            } else if (valor <= -10) {
+              clase = "variacion-rojo-3";
+            } else if (valor <= -5) {
+              clase = "variacion-rojo-2";
+            } else if (valor < 0) {
+              clase = "variacion-rojo-1";
+            }
+
+            const signo = valor > 0 ? "▲" : valor < 0 ? "▼" : "";
+            const contenido =
+              valor !== null
+                ? `${signo} ${Math.abs(valor).toFixed(2)}%`
+                : "N/D";
+            return `
+              <div class="tarjeta ${clase}" style="flex: 1; min-width: 200px;">
+                <div class="tarjeta-nombre">${titulo}</div>
+                <div class="tarjeta-precio-hoy">${contenido}</div>
+              </div>
+            `;
+          };
+
+          function inflacionUltimoMes() {
+            const indicesAbril = [24, 25, 26, 27, 28];
+            let total = 1;
+            indicesAbril.forEach((i) => {
+              total *= 1 + datosBase[i] / 100;
+            });
+            return ((total - 1) * 100).toFixed(2);
+          }
+
+          divPromedios.innerHTML = `
+            ${generarTarjetaPromedio(
+              "Variación 1 semana",
+              promedio(suma1, count1)
+            )}
+            ${generarTarjetaPromedio(
+              "Variación 2 semanas",
+              promedio(suma2, count2)
+            )}
+            ${generarTarjetaPromedio(
+              "Variación 3 semanas",
+              promedio(suma3, count3)
+            )}
+            ${generarTarjetaPromedio(
+              "Inflación intermensual",
+              inflacionUltimoMes()
+            )}
+            ${generarTarjetaPromedio(
+              "Respecto a Nov/24",
+              promedio(sumaHist, countHist)
+            )}
+          `;
+
+          datos.forEach((p) => {
+            const variacion7 = variacion(p.precio_hoy, p.precio_7dias);
+            const variacion14 = variacion(p.precio_7dias, p.precio_14dias);
+            const variacion21 = variacion(p.precio_14dias, p.precio_21dias);
+            const variacionHist = variacion(p.precio_hoy, p.precio_historico);
+
+            let claseVar7 = "";
+            let claseTarjeta = "";
+
+            if (variacion7 > 20) {
+              claseTarjeta = "fuego-total";
+            } else if (variacion7 >= 15) {
+              claseTarjeta = "variacion-verde-4";
+            } else if (variacion7 >= 10) {
+              claseTarjeta = "variacion-verde-3";
+            } else if (variacion7 >= 5) {
+              claseTarjeta = "variacion-verde-2";
+            } else if (variacion7 > 0) {
+              claseTarjeta = "variacion-verde-1";
+            } else if (variacion7 < -20) {
+              claseTarjeta = "piano-total";
+            } else if (variacion7 <= -15) {
+              claseTarjeta = "variacion-rojo-4";
+            } else if (variacion7 <= -10) {
+              claseTarjeta = "variacion-rojo-3";
+            } else if (variacion7 <= -5) {
+              claseTarjeta = "variacion-rojo-2";
+            } else if (variacion7 < 0) {
+              claseTarjeta = "variacion-rojo-1";
+            }
+
+            const tarjeta = document.createElement("div");
+            tarjeta.className = `tarjeta ${claseTarjeta}`;
+
+            const varTexto =
+              variacion7 !== null
+                ? variacion7 > 20
+                  ? `🔥 ▲ ${variacion7.toFixed(1)}%`
+                  : variacion7 < -20
+                  ? `🎹 ▼ ${Math.abs(variacion7).toFixed(1)}%`
+                  : variacion7 > 0
+                  ? `⬆️ ${variacion7.toFixed(1)}%`
+                  : variacion7 < 0
+                  ? `⬇️ ${Math.abs(variacion7).toFixed(1)}%`
+                  : `0.0%`
+                : "-";
+
+            const bloqueVar = (label, valor, valorOriginal) => {
+              if (valor === null) {
+                return `
+      <div class="${clase} variacion-sin-cambio">
+        ${label}: -<br>
+        <small>Precio: $${valorOriginal ?? "-"}</small>
+      </div>`;
+              }
+
+              if (valor === 0) {
+                return `
+      <div class="variacion-sin-cambio">
+        ${label}: 0.0%<br>
+        <small>Precio: $${valorOriginal ?? "-"}</small>
+      </div>`;
+              }
+              if (valor === null) return `<div>${label}: -</div>`;
+
+              let clase = "";
+              if (valor > 20) clase = "fuego";
+              else if (valor >= 15) clase = "variacion-verde-4";
+              else if (valor >= 10) clase = "variacion-verde-3";
+              else if (valor >= 5) clase = "variacion-verde-2";
+              else if (valor > 0) clase = "variacion-verde-1";
+              else if (valor < -20) clase = "piano";
+              else if (valor <= -15) clase = "variacion-rojo-4";
+              else if (valor <= -10) clase = "variacion-rojo-3";
+              else if (valor <= -5) clase = "variacion-rojo-2";
+              else if (valor < 0) clase = "variacion-rojo-1";
+
+              const signo =
+                valor > 20
+                  ? `🔥 ▲`
+                  : valor < -20
+                  ? `🎹 ▼`
+                  : valor > 0
+                  ? `▲`
+                  : valor < 0
+                  ? `▼`
+                  : "";
+
+              return `
+                <div class="${clase}">
+                  ${label}: ${signo} ${Math.abs(valor).toFixed(1)}%
+                  <small>Precio: $${valorOriginal ?? "-"}</small>
+                </div>
+              `;
+            };
+
+            const bloqueHTML = `
+             ${bloqueVar("Variacion 1 semana", variacion7, p.precio_7dias)}
+              ${bloqueVar("Variación 2 semanas", variacion14, p.precio_14dias)}
+              ${bloqueVar("Variación 3 semanas", variacion21, p.precio_21dias)}
+              ${bloqueVar(
+                "Respecto a Nov/24",
+                variacionHist,
+                p.precio_historico
+              )}
+            `;
+
+            tarjeta.innerHTML = `
+              <div class="tarjeta-header">
+                <div class="tarjeta-nombre">${p.nombre}</div>
+                <div class="tarjeta-precio-hoy">$${p.precio_hoy ?? "-"}</div>
+              </div>
+              <div class="variacion ${claseVar7}">${varTexto} &mdash; Últ. 7 días</div>
+              <div class="tarjeta-precio-anterior">Anterior: $${
+                p.precio_7dias ?? "-"
+              }</div>
+            `;
+
+            window.addEventListener("click", (e) => {
+              const modal = document.getElementById("modal");
+              if (e.target === modal) {
+                modal.style.display = "none";
+                const modalContenido = document.getElementById(
+                  "modal-contenido-interno"
+                );
+                if (modalContenido) modalContenido.innerHTML = "";
+              }
+            });
+
+            tarjeta.addEventListener("click", () => {
+              const isMobile = window.innerWidth <= 768;
+              if (isMobile) {
+                let cont = tarjeta.querySelector(".bloque-var");
+                if (!cont) {
+                  cont = document.createElement("div");
+                  cont.className = "bloque-var";
+                  cont.innerHTML = bloqueHTML;
+                  tarjeta.appendChild(cont);
+                }
+                cont.style.display =
+                  cont.style.display === "flex" ? "none" : "flex";
+              } else {
+                modalContenido.innerHTML = `<h3>${p.nombre}</h3>` + bloqueHTML;
+                modal.style.display = "flex";
+              }
+            });
+
+            contenedor.appendChild(tarjeta);
+          });
+        } catch (err) {
+          console.error("Error al cargar productos:", err);
+        }
+      }
+
+      cargarTarjetas();
+    </script>
+
+    <!-- Chart.js desde CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+      // 1) Datos base
+      const datosBase = [
+        -1.4, -0.15, -0.55, -0.77, 0.57, 4, 4.21, -0.01, 0.5, 0.3, 0.1, 0.2,
+        2.92, -3.89, -0.47, -1.2, 6.5, -2.43, 6.24, -3.6, 1.28, 0.62, 4.57,
+        -2.02, 1.76, -4.25, 3.01, -1.87, 2.03,
+      ];
+      const semanasBase = [
+        "1° sem nov",
+        "2° sem nov",
+        "3° sem nov",
+        "4° sem nov",
+        "1° sem dic",
+        "2° sem dic",
+        "3° sem dic",
+        "4° sem dic",
+        "1° sem ene",
+        "2° sem ene",
+        "3° sem ene",
+        "4° sem ene",
+        "1° sem feb",
+        "2° sem feb",
+        "3° sem feb",
+        "4° sem feb",
+        "1° sem mar",
+        "2° sem mar",
+        "3° sem mar",
+        "4° sem mar",
+        "1° sem abr",
+        "2° sem abr",
+        "3° sem abr",
+        "4° sem abr",
+        "1° sem may",
+        "2° sem may",
+        "3° sem may",
+        "4° sem may",
+        "5° sem may",
+      ];
+
+      // 2) Acumulada
+      function calcularInflacionAcumulada(datos) {
+        let acumulada = [],
+          total = 1;
+        for (let i = 0; i < datos.length; i++) {
+          total *= 1 + datos[i] / 100;
+          acumulada.push(+((total - 1) * 100).toFixed(2));
+        }
+        return acumulada;
+      }
+
+      // 3) Variables globales para el chart
+      const ctx = document.getElementById("inflacionChart").getContext("2d");
+      let modo = "acum"; // 'acum' o 'var'
+      let inflacionChart;
+
+      // Gradiente para el área de la línea
+      const gradientAcum = ctx.createLinearGradient(0, 0, 0, 400);
+      gradientAcum.addColorStop(0, "rgba(0,255,0,0.2)");
+      gradientAcum.addColorStop(1, "rgba(0,255,0,0)");
+
+      // Genera array de colores para barras
+      function generarColoresBarras(datos) {
+        return datos.map(
+          (_, i) =>
+            i === datosBase.length - 1
+              ? "orange" // última barra en naranja
+              : "#3366cc" // el resto en azul
+        );
+      }
+
+      // 4) Crea un nuevo chart según el modo actual
+      function crearChart() {
+        const data =
+          modo === "acum"
+            ? {
+                labels: semanasBase,
+                datasets: [
+                  {
+                    label: "Inflación Acumulada",
+                    data: calcularInflacionAcumulada(datosBase),
+                    backgroundColor: gradientAcum,
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 4,
+                    pointHoverRadius: 7,
+                    pointHitRadius: 15,
+                    pointBackgroundColor: "#00ff80",
+                    borderWidth: 2,
+                    segment: {
+                      borderColor: (ctx) => {
+                        const y0 = ctx.p0.parsed.y,
+                          y1 = ctx.p1.parsed.y;
+                        return y1 < y0 ? "#ff4d4d" : "#00ff80";
+                      },
+                    },
+                  },
+                ],
+              }
+            : {
+                labels: semanasBase,
+                datasets: [
+                  {
+                    label: "Variación Semanal",
+                    data: datosBase,
+                    backgroundColor: generarColoresBarras(datosBase),
+                    borderWidth: 0,
+                  },
+                ],
+              };
+
+        const config = {
+          type: modo === "acum" ? "line" : "bar",
+          data: data,
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                callbacks: {
+                  label: (ctx) =>
+                    modo === "acum"
+                      ? `Inflación Acumulada: ${ctx.raw}%`
+                      : `Variación Semanal: ${ctx.raw}%`,
+                },
+              },
+            },
+            scales: {
+              x: {
+                grid: { display: false },
+                ticks: { color: "#888", maxRotation: 0, font: { size: 10 } },
+              },
+              y: {
+                grid: { color: "rgba(0,0,0,0.1)" },
+                ticks: {
+                  color: "#888",
+                  callback: (v) => `${v}%`,
+                },
+              },
+            },
+          },
+        };
+
+        return new Chart(ctx, config);
+      }
+
+      // 5) Arranca como línea acumulada
+      inflacionChart = crearChart();
+
+      // 6) Botón mostrar/ocultar
+      document
+        .getElementById("mostrarGraficoBtn")
+        .addEventListener("click", () => {
+          const c = document.getElementById("contenedorGrafico");
+          c.style.display = c.style.display === "none" ? "block" : "none";
+        });
+
+      // 7) Botón alternar representación
+      document
+        .getElementById("toggleRepresentacionBtn")
+        .addEventListener("click", function () {
+          inflacionChart.destroy();
+          modo = modo === "acum" ? "var" : "acum";
+          this.textContent =
+            modo === "acum"
+              ? "Ver Variación Semanal"
+              : "Ver Inflación Acumulada";
+          inflacionChart = crearChart();
+        });
+
+      // 8) Filtrado de semanas (funciona para ambos modos)
+      function filtrarSemanas(cantidad) {
+        const total = datosBase.length;
+        const desde = cantidad ? Math.max(total - cantidad, 0) : 0;
+        const datosFiltrados = datosBase.slice(desde);
+        const etiquetasFiltradas = semanasBase.slice(desde);
+
+        inflacionChart.data.labels = etiquetasFiltradas;
+
+        if (modo === "acum") {
+          inflacionChart.data.datasets[0].data =
+            calcularInflacionAcumulada(datosFiltrados);
+        } else {
+          inflacionChart.data.datasets[0].data = datosFiltrados;
+          inflacionChart.data.datasets[0].backgroundColor =
+            generarColoresBarras(datosFiltrados).slice(0);
+        }
+
+        inflacionChart.update();
+      }
+    </script>
 
     <style>
       #contenedorGrafico {
