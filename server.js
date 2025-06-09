@@ -33,7 +33,6 @@ const opcionesSSL = {
 
 
 
-
 app.use(express.json());
 
 
@@ -246,33 +245,6 @@ app.get("/verificar-sesion", (req, res) => {
 app.get("/logout", (req, res) => {
   req.session.destroy(() => {
     res.send("Sesión cerrada");
-  });
-});
-
-// Obtener semanas
-app.get("/semanas", (req, res) => {
-  db.query("SELECT * FROM semanas_inflacion ORDER BY id", (err, resultados) => {
-    if (err) return res.status(500).send(err);
-    res.json(resultados);
-  });
-});
-
-// Agregar nueva semana
-app.post("/semanas", (req, res) => {
-  const { nombre, porcentaje } = req.body;
-  db.query("INSERT INTO semanas_inflacion (nombre, porcentaje) VALUES (?, ?)", [nombre, porcentaje], (err) => {
-    if (err) return res.status(500).send(err);
-    res.send("Semana agregada");
-  });
-});
-
-// Editar semana existente
-app.put("/semanas/:id", (req, res) => {
-  const { id } = req.params;
-  const { nombre, porcentaje } = req.body;
-  db.query("UPDATE semanas_inflacion SET nombre = ?, porcentaje = ? WHERE id = ?", [nombre, porcentaje, id], (err) => {
-    if (err) return res.status(500).send(err);
-    res.send("Semana actualizada");
   });
 });
 
