@@ -108,6 +108,26 @@
       Desplazar Precios Semanales
     </button>
 
+    <h3 style="text-align: center; margin-top: 3em">Variaciones semanales</h3>
+    <form id="formSemana">
+      <input type="hidden" id="semana_id" />
+      <input
+        type="text"
+        id="semana_texto"
+        placeholder="Ej: 1° sem jun"
+        required
+      />
+      <input
+        type="number"
+        id="semana_variacion"
+        step="0.01"
+        placeholder="Variación (%)"
+        required
+      />
+      <button type="submit">Guardar Semana</button>
+    </form>
+    <div id="listaSemanas" style="margin-top: 2em"></div>
+
     <script>
       async function desplazarPrecios() {
         try {
@@ -309,6 +329,82 @@
     </script>
 
     <script>
+      async function cargarSemanas() {
+        const res = await fetch("https://veterinarialol.ddns.net:4000/semanas");
+        const semanas = await res.json();
+        const cont = document.getElementById("listaSemanas");
+        cont.innerHTML = semanas
+          .map(
+            (s) => `
+  <div style="margin-bottom:10px;">
+    <input type="text" value="${s.semana}" disabled />
+    <input type="number" value="${s.variacion}" disabled />
+    <button onclick="editarSemana(${s.id}, '${s.semana}', ${s.variacion})">✏️</button>
+    <button onclick="eliminarSemana(${s.id})" style="background:#e53935; color:white;">🗑️</button>
+  </div>
+`
+          )
+          .join("");
+      }
+
+      function editarSemana(id, semana, variacion) {
+        document.getElementById("semana_id").value = id;
+        document.getElementById("semana_texto").value = semana;
+        document.getElementById("semana_variacion").value = variacion;
+      }
+
+      document
+        .getElementById("formSemana")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const id = document.getElementById("semana_id").value;
+          const semana = document.getElementById("semana_texto").value;
+          const variacion = parseFloat(
+            document.getElementById("semana_variacion").value
+          );
+
+          const url = id
+            ? `https://veterinarialol.ddns.net:4000/semanas/${id}`
+            : "https://veterinarialol.ddns.net:4000/semanas";
+          const method = id ? "PUT" : "POST";
+
+          const response = await fetch(url, {
+            method,
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ semana, variacion }),
+          });
+
+          if (!response.ok) {
+            const errText = await response.text();
+            alert("Error al guardar semana:\n" + errText);
+            return;
+          }
+
+          document.getElementById("semana_id").value = "";
+          document.getElementById("formSemana").reset();
+          cargarSemanas();
+        });
+
+      // ✅ ESTA FUNCIÓN DEBE ESTAR FUERA DEL BLOQUE ANTERIOR
+      async function eliminarSemana(id) {
+        if (!confirm("¿Estás seguro de eliminar esta semana?")) return;
+        try {
+          await fetch(`https://veterinarialol.ddns.net:4000/semanas/${id}`, {
+            method: "DELETE",
+          });
+          cargarSemanas(); // recarga la lista
+        } catch (err) {
+          alert("❌ Error al eliminar la semana");
+          console.error(err);
+        }
+      }
+    </script>
+
+    <script>
+      cargarSemanas();
+    </script>
+
+    <script>
       fetch("https://veterinarialol.ddns.net:4000/verificar-sesion", {
         credentials: "include",
       }).then((res) => {
@@ -319,5 +415,13 @@
         }
       });
     </script>
+
+    <style>
+      div#listaSemanas {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 30px;
+      }
+    </style>
   </body>
 </html>

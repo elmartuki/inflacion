@@ -18,22 +18,28 @@ const opcionesSSL = {
     key: fs.readFileSync('C:/xampp/apache/conf/ssl.key/private.key'),  // Ruta a la clave privada
   };
 
-  app.use(cors({
-    origin: "https://inflacionsemanal.netlify.app",
-    credentials: true
-  }));
-  
-  app.use((req, res, next) => {
-    res.header("Access-Control-Allow-Origin", "https://inflacionsemanal.netlify.app");
-    res.header("Access-Control-Allow-Credentials", "true");
-    res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-    res.header("Access-Control-Allow-Headers", "Content-Type");
-    next();
-  });
-
-
 
 app.use(express.json());
+
+// justo después de `const cors = require('cors');`
+const allowedOrigins = [
+  "https://inflacionsemanal.netlify.app",
+  "http://127.0.0.1:5500",
+  "http://localhost:5500",
+  "https://veterinarialol.ddns.net",
+  "https://localhost:4000"
+];
+
+app.use(cors({
+  origin: function(origin, callback) {
+    // permitir peticiones sin origen (Postman/CURL) o que estén en la lista
+    if (!origin || allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    callback(new Error("Origen no permitido por CORS: " + origin));
+  },
+  credentials: true
+}));
 
 
 const multer = require('multer');
@@ -247,6 +253,48 @@ app.get("/logout", (req, res) => {
     res.send("Sesión cerrada");
   });
 });
+
+
+
+app.get('/semanas', (req, res) => {
+  db.query('SELECT * FROM inflacion_semanal ORDER BY id ASC', (err, rows) => {
+    if (err) return res.status(500).send(err);
+    res.json(rows);
+  });
+});
+
+
+app.post('/semanas', (req, res) => {
+  const { semana, variacion } = req.body;
+  console.log("📩 Semana recibida:", semana, variacion); // ← esto
+  const query = 'INSERT INTO inflacion_semanal (semana, variacion) VALUES (?, ?)';
+  db.query(query, [semana, variacion], (err) => {
+    if (err) return res.status(500).send(err);
+    res.send('Semana agregada correctamente');
+  });
+});
+
+
+app.put('/semanas/:id', (req, res) => {
+  const { id } = req.params;
+  const { semana, variacion } = req.body;
+  const query = 'UPDATE inflacion_semanal SET semana = ?, variacion = ? WHERE id = ?';
+  db.query(query, [semana, variacion, id], (err) => {
+    if (err) return res.status(500).send(err);
+    res.send('Semana actualizada');
+  });
+});
+
+
+app.delete('/semanas/:id', (req, res) => {
+  const { id } = req.params;
+  db.query('DELETE FROM inflacion_semanal WHERE id = ?', [id], (err) => {
+    if (err) return res.status(500).send(err);
+    res.send('Semana eliminada');
+  });
+});
+
+
 
 
 https.createServer(opcionesSSL, app).listen(4000, '0.0.0.0', () => {

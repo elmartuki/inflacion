@@ -788,37 +788,29 @@
             `;
           };
 
-          function inflacionUltimoMes() {
-            const indicesAbril = [24, 25, 26, 27, 28];
+          function inflacionUltimoMes(variacionActual) {
+            if (datosBase.length < 3) return "-"; // solo se necesitan 3 históricas
+
+            const ultimos3 = datosBase.slice(-3);
+            const todas = [...ultimos3, parseFloat(variacionActual)];
+
             let total = 1;
-            indicesAbril.forEach((i) => {
-              total *= 1 + datosBase[i] / 100;
+            todas.forEach((v) => {
+              total *= 1 + v / 100;
             });
             return ((total - 1) * 100).toFixed(2);
           }
 
           divPromedios.innerHTML = `
-            ${generarTarjetaPromedio(
-              "Variación 1 semana",
-              promedio(suma1, count1)
-            )}
-            ${generarTarjetaPromedio(
-              "Variación 2 semanas",
-              promedio(suma2, count2)
-            )}
-            ${generarTarjetaPromedio(
-              "Variación 3 semanas",
-              promedio(suma3, count3)
-            )}
-            ${generarTarjetaPromedio(
-              "Inflación intermensual",
-              inflacionUltimoMes()
-            )}
-            ${generarTarjetaPromedio(
-              "Respecto a Nov/24",
-              promedio(sumaHist, countHist)
-            )}
-          `;
+  ${generarTarjetaPromedio("Variación 1 semana", promedio(suma1, count1))}
+  ${generarTarjetaPromedio("Variación 2 semanas", promedio(suma2, count2))}
+  ${generarTarjetaPromedio("Variación 3 semanas", promedio(suma3, count3))}
+  ${generarTarjetaPromedio(
+    "Inflación intermensual",
+    inflacionUltimoMes(promedio(suma1, count1)) // ✅ acá se pasa como argumento
+  )}
+  ${generarTarjetaPromedio("Respecto a Nov/24", promedio(sumaHist, countHist))}
+`;
 
           datos.forEach((p) => {
             const variacion7 = variacion(p.precio_hoy, p.precio_7dias);
@@ -974,51 +966,35 @@
         }
       }
 
-      cargarTarjetas();
+      window.addEventListener("DOMContentLoaded", async () => {
+        await inicializarChart(); // Espera que se cargue datosBase
+        cargarTarjetas(); // Luego genera los promedios, incluyendo Inflación intermensual
+      });
     </script>
 
     <!-- Chart.js desde CDN -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
       // 1) Datos base
-      const datosBase = [
-        -1.4, -0.15, -0.55, -0.77, 0.57, 4, 4.21, -0.01, 0.5, 0.3, 0.1, 0.2,
-        2.92, -3.89, -0.47, -1.2, 6.5, -2.43, 6.24, -3.6, 1.28, 0.62, 4.57,
-        -2.02, 1.76, -4.25, 3.01, -1.87, 2.03,
-      ];
-      const semanasBase = [
-        "1° sem nov",
-        "2° sem nov",
-        "3° sem nov",
-        "4° sem nov",
-        "1° sem dic",
-        "2° sem dic",
-        "3° sem dic",
-        "4° sem dic",
-        "1° sem ene",
-        "2° sem ene",
-        "3° sem ene",
-        "4° sem ene",
-        "1° sem feb",
-        "2° sem feb",
-        "3° sem feb",
-        "4° sem feb",
-        "1° sem mar",
-        "2° sem mar",
-        "3° sem mar",
-        "4° sem mar",
-        "1° sem abr",
-        "2° sem abr",
-        "3° sem abr",
-        "4° sem abr",
-        "1° sem may",
-        "2° sem may",
-        "3° sem may",
-        "4° sem may",
-        "5° sem may",
-      ];
+      let datosBase = [],
+        semanasBase = [];
 
-      // 2) Acumulada
+      // 2) Inicializa los datos y crea el gráfico
+      async function inicializarChart() {
+        try {
+          const res = await fetch(
+            "https://veterinarialol.ddns.net:4000/semanas"
+          );
+          const semanas = await res.json();
+          semanasBase = semanas.map((s) => s.semana);
+          datosBase = semanas.map((s) => parseFloat(s.variacion));
+          inflacionChart = crearChart(); // ✅ solo se llama aquí
+        } catch (err) {
+          console.error("Error al cargar datos de semanas:", err);
+        }
+      }
+
+      // 3) Acumulada
       function calcularInflacionAcumulada(datos) {
         let acumulada = [],
           total = 1;
@@ -1029,27 +1005,23 @@
         return acumulada;
       }
 
-      // 3) Variables globales para el chart
+      // 4) Variables globales
       const ctx = document.getElementById("inflacionChart").getContext("2d");
-      let modo = "acum"; // 'acum' o 'var'
+      let modo = "acum";
       let inflacionChart;
 
-      // Gradiente para el área de la línea
+      // Gradiente
       const gradientAcum = ctx.createLinearGradient(0, 0, 0, 400);
       gradientAcum.addColorStop(0, "rgba(0,255,0,0.2)");
       gradientAcum.addColorStop(1, "rgba(0,255,0,0)");
 
-      // Genera array de colores para barras
       function generarColoresBarras(datos) {
-        return datos.map(
-          (_, i) =>
-            i === datosBase.length - 1
-              ? "orange" // última barra en naranja
-              : "#3366cc" // el resto en azul
+        return datos.map((_, i) =>
+          i === datosBase.length - 1 ? "orange" : "#3366cc"
         );
       }
 
-      // 4) Crea un nuevo chart según el modo actual
+      // 5) Crear el gráfico
       function crearChart() {
         const data =
           modo === "acum"
@@ -1125,10 +1097,7 @@
         return new Chart(ctx, config);
       }
 
-      // 5) Arranca como línea acumulada
-      inflacionChart = crearChart();
-
-      // 6) Botón mostrar/ocultar
+      // 6) Botón mostrar/ocultar gráfico
       document
         .getElementById("mostrarGraficoBtn")
         .addEventListener("click", () => {
@@ -1136,7 +1105,7 @@
           c.style.display = c.style.display === "none" ? "block" : "none";
         });
 
-      // 7) Botón alternar representación
+      // 7) Alternar entre acumulado y semanal
       document
         .getElementById("toggleRepresentacionBtn")
         .addEventListener("click", function () {
@@ -1149,7 +1118,7 @@
           inflacionChart = crearChart();
         });
 
-      // 8) Filtrado de semanas (funciona para ambos modos)
+      // 8) Filtrado de semanas
       function filtrarSemanas(cantidad) {
         const total = datosBase.length;
         const desde = cantidad ? Math.max(total - cantidad, 0) : 0;
@@ -1169,6 +1138,11 @@
 
         inflacionChart.update();
       }
+
+      // 9) Ejecutar al cargar la página
+      window.addEventListener("DOMContentLoaded", async () => {
+        await inicializarChart(); // ✅ ahora el gráfico se carga automáticamente
+      });
     </script>
 
     <style>
