@@ -4,53 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Agregar o Editar Producto</title>
-    <style>
-      body {
-        background-color: #121212;
-        color: #ffffff;
-        font-family: sans-serif;
-        padding: 2em;
-      }
-      form {
-        display: flex;
-        flex-direction: column;
-        max-width: 400px;
-        margin: auto;
-        gap: 1em;
-        background: #1e1e1e;
-        padding: 2em;
-        border-radius: 10px;
-      }
-      input,
-      button {
-        padding: 0.5em;
-        border: none;
-        border-radius: 5px;
-      }
-      input {
-        background: #2a2a2a;
-        color: #ffffff;
-      }
-      button {
-        background: #03dac6;
-        color: #000;
-        cursor: pointer;
-      }
-      button:hover {
-        background: #00bfa5;
-      }
-
-      form#formProducto {
-        display: none !important;
-      }
-
-      @media (max-width: 600px) {
-        #listaProductos > div {
-          flex: 0 0 calc(50% - 1em);
-          box-sizing: border-box;
-        }
-      }
-    </style>
+    <link rel="stylesheet" href="./css/formulario.css">
   </head>
   <body>
     <form id="formProducto" style="display: none">
@@ -415,13 +369,5 @@
         }
       });
     </script>
-
-    <style>
-      div#listaSemanas {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 30px;
-      }
-    </style>
   </body>
 </html>
