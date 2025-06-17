@@ -57,22 +57,23 @@ app.post('/importar-csv', upload.single('csv'), (req, res) => {
       fs.unlinkSync(req.file.path); // borrar archivo temporal
 
       const values = resultados.map(r => [
-        r.nombre?.trim() || '',
-        parseFloat(r.precio_hoy) || 0,
-        parseFloat(r.precio_7dias) || 0,
-        parseFloat(r.precio_14dias) || 0,
-        parseFloat(r.precio_21dias) || 0,
-        parseFloat(r.precio_historico) || 0
-      ]);
+  r.nombre?.trim() || '',
+  parseFloat(r.precio_hoy) || 0,
+  parseFloat(r.precio_7dias) || 0,
+  parseFloat(r.precio_14dias) || 0,
+  parseFloat(r.precio_21dias) || 0,
+  parseFloat(r.precio_28dias) || 0,
+  parseFloat(r.precio_historico) || 0
+]);
 
       if (values.length === 0) {
         return res.status(400).send('El archivo CSV está vacío o mal formateado');
       }
 
       const insertQuery = `
-        INSERT INTO inflacion (nombre, precio_hoy, precio_7dias, precio_14dias, precio_21dias, precio_historico)
-        VALUES ?
-      `;
+  INSERT INTO inflacion (nombre, precio_hoy, precio_7dias, precio_14dias, precio_21dias, precio_28dias, precio_historico)
+  VALUES ?
+`;
 
       db.query(insertQuery, [values], (err) => {
         if (err) {
@@ -125,20 +126,21 @@ app.get('/inflacion', (req, res) => {
 });
 
 app.post('/desplazar', (req, res) => {
-    const query = `
-      UPDATE inflacion SET
-        precio_21dias = precio_14dias,
-        precio_14dias = precio_7dias,
-        precio_7dias = precio_hoy
-    `;
-    db.query(query, (err) => {
-      if (err) {
-        console.error('❌ Error al desplazar los precios:', err);
-        return res.status(500).send('Error al desplazar los precios');
-      }
-      res.send('✅ Precios desplazados correctamente');
-    });
+  const query = `
+    UPDATE inflacion SET
+      precio_28dias = precio_21dias,
+      precio_21dias = precio_14dias,
+      precio_14dias = precio_7dias,
+      precio_7dias = precio_hoy
+  `;
+  db.query(query, (err) => {
+    if (err) {
+      console.error('❌ Error al desplazar los precios:', err);
+      return res.status(500).send('Error al desplazar los precios');
+    }
+    res.send('✅ Precios desplazados correctamente');
   });
+});
   
 
 
@@ -146,23 +148,13 @@ app.post('/desplazar', (req, res) => {
 
 // Agregar nuevo producto
 app.post('/inflacion', (req, res) => {
-  const {
-    nombre, precio_hoy, precio_7dias,
-    precio_14dias, precio_21dias,
-    precio_historico
-  } = req.body;
+  const { nombre, precio_hoy, precio_7dias, precio_14dias, precio_21dias, precio_28dias, precio_historico } = req.body;
 
-  const sql = `INSERT INTO inflacion 
-    (nombre, precio_hoy, precio_7dias,
-    precio_14dias, precio_21dias,
-    precio_historico)
-    VALUES (?, ?, ?, ?, ?, ?)`;
+const sql = `INSERT INTO inflacion 
+(nombre, precio_hoy, precio_7dias, precio_14dias, precio_21dias, precio_28dias, precio_historico)
+VALUES (?, ?, ?, ?, ?, ?, ?)`;
 
-  db.query(sql, [
-    nombre, precio_hoy, precio_7dias,
-    precio_14dias, precio_21dias,
-    precio_historico
-  ], (err, resultado) => {
+db.query(sql, [nombre, precio_hoy, precio_7dias, precio_14dias, precio_21dias, precio_28dias, precio_historico], (err, resultado) => {
     if (err) return res.status(500).send(err);
     res.send('Producto agregado correctamente');
   });
@@ -171,23 +163,13 @@ app.post('/inflacion', (req, res) => {
 // Editar producto existente
 app.put('/inflacion/:id', (req, res) => {
   const { id } = req.params;
-  const {
-    nombre, precio_hoy, precio_7dias,
-    precio_14dias, precio_21dias,
-    precio_historico
-  } = req.body;
+  const { nombre, precio_hoy, precio_7dias, precio_14dias, precio_21dias, precio_28dias, precio_historico } = req.body;
 
-  const sql = `UPDATE inflacion SET 
-    nombre = ?, precio_hoy = ?, precio_7dias = ?,
-    precio_14dias = ?, precio_21dias = ?,
-    precio_historico = ?
-    WHERE id = ?`;
+const sql = `UPDATE inflacion SET 
+nombre = ?, precio_hoy = ?, precio_7dias = ?, precio_14dias = ?, precio_21dias = ?, precio_28dias = ?, precio_historico = ?
+WHERE id = ?`;
 
-  db.query(sql, [
-    nombre, precio_hoy, precio_7dias,
-    precio_14dias, precio_21dias,
-    precio_historico, id
-  ], (err, resultado) => {
+db.query(sql, [nombre, precio_hoy, precio_7dias, precio_14dias, precio_21dias, precio_28dias, precio_historico, id], (err, resultado) => {
     if (err) return res.status(500).send(err);
     res.send('Producto actualizado');
   });

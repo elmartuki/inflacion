@@ -717,10 +717,12 @@
           let suma1 = 0,
             suma2 = 0,
             suma3 = 0,
+            suma4 = 0, // ✅ agregado
             sumaHist = 0;
           let count1 = 0,
             count2 = 0,
             count3 = 0,
+            count4 = 0, // ✅ agregado
             countHist = 0;
 
           const variacion = (a, b) =>
@@ -730,6 +732,7 @@
             const v1 = variacion(p.precio_hoy, p.precio_7dias);
             const v2 = variacion(p.precio_7dias, p.precio_14dias);
             const v3 = variacion(p.precio_14dias, p.precio_21dias);
+            const v4 = variacion(p.precio_hoy, p.precio_28dias);
             const vh = variacion(p.precio_hoy, p.precio_historico);
             if (v1 !== null) {
               suma1 += v1;
@@ -742,6 +745,10 @@
             if (v3 !== null) {
               suma3 += v3;
               count3++;
+            }
+            if (v4 !== null) {
+              suma4 += v4;
+              count4++;
             }
             if (vh !== null) {
               sumaHist += vh;
@@ -805,10 +812,7 @@
   ${generarTarjetaPromedio("Variación 1 semana", promedio(suma1, count1))}
   ${generarTarjetaPromedio("Variación 2 semanas", promedio(suma2, count2))}
   ${generarTarjetaPromedio("Variación 3 semanas", promedio(suma3, count3))}
-  ${generarTarjetaPromedio(
-    "Inflación intermensual",
-    inflacionUltimoMes(promedio(suma1, count1)) // ✅ acá se pasa como argumento
-  )}
+  ${generarTarjetaPromedio("Variación intermensual", promedio(suma4, count4))}
   ${generarTarjetaPromedio("Respecto a Nov/24", promedio(sumaHist, countHist))}
 `;
 
@@ -912,6 +916,13 @@
              ${bloqueVar("Variacion 1 semana", variacion7, p.precio_7dias)}
               ${bloqueVar("Variación 2 semanas", variacion14, p.precio_14dias)}
               ${bloqueVar("Variación 3 semanas", variacion21, p.precio_21dias)}
+              ${bloqueVar(
+                "Variación 4 semanas",
+                variacion(p.precio_hoy, p.precio_28dias),
+                p.precio_28dias
+              )}
+
+
               ${bloqueVar(
                 "Respecto a Nov/24",
                 variacionHist,

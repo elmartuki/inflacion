@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Agregar o Editar Producto</title>
-    <link rel="stylesheet" href="./css/formulario.css">
+    <link rel="stylesheet" href="./css/formulario.css" />
   </head>
   <body>
     <form id="formProducto" style="display: none">
@@ -29,6 +29,9 @@
 
       <label for="precio_21dias">Precio 21 Días</label>
       <input type="number" id="precio_21dias" placeholder="Precio 21 Días" />
+
+      <label for="precio_28dias">Precio 28 Días</label>
+      <input type="number" id="precio_28dias" placeholder="Precio 28 Días" />
 
       <label for="precio_historico">Precio Histórico</label>
       <input
@@ -117,6 +120,8 @@
             producto.precio_14dias;
           document.getElementById("precio_21dias").value =
             producto.precio_21dias;
+          document.getElementById("precio_28dias").value =
+            producto.precio_28dias;
           document.getElementById("precio_historico").value =
             producto.precio_historico;
         } catch (err) {
@@ -145,6 +150,11 @@
           precio_21dias: parseFloat(
             document.getElementById("precio_21dias").value
           ),
+
+          precio_28dias: parseFloat(
+            document.getElementById("precio_28dias").value
+          ),
+
           precio_historico: parseFloat(
             document.getElementById("precio_historico").value
           ),
@@ -194,33 +204,36 @@
             tarjeta.style.boxSizing = "border-box";
 
             tarjeta.innerHTML = `
-        <input type="text" value="${
-          p.nombre
-        }" placeholder="Nombre" style="background:#2a2a2a; color:white; padding:0.5em; border:none; border-radius:5px;" disabled />
-        <input type="number" value="${
-          p.precio_hoy ?? ""
-        }" placeholder="Precio Hoy" style="background:#2a2a2a; color:white; padding:0.5em; border:none; border-radius:5px;" disabled />
-        <input type="number" value="${
-          p.precio_7dias ?? ""
-        }" placeholder="Precio 7 días" style="background:#2a2a2a; color:white; padding:0.5em; border:none; border-radius:5px;" disabled />
-        <input type="number" value="${
-          p.precio_14dias ?? ""
-        }" placeholder="Precio 14 días" style="background:#2a2a2a; color:white; padding:0.5em; border:none; border-radius:5px;" disabled />
-        <input type="number" value="${
-          p.precio_21dias ?? ""
-        }" placeholder="Precio 21 días" style="background:#2a2a2a; color:white; padding:0.5em; border:none; border-radius:5px;" disabled />
-        <input type="number" value="${
-          p.precio_historico ?? ""
-        }" placeholder="Precio Histórico" style="background:#2a2a2a; color:white; padding:0.5em; border:none; border-radius:5px;" disabled />
+  <input type="text" value="${
+    p.nombre
+  }" placeholder="Nombre" style="background:#2a2a2a; color:white; padding:0.5em; border:none; border-radius:5px;" disabled />
+  <input type="number" value="${
+    p.precio_hoy ?? ""
+  }" placeholder="Precio Hoy" style="background:#2a2a2a; color:white; padding:0.5em; border:none; border-radius:5px;" disabled />
+  <input type="number" value="${
+    p.precio_7dias ?? ""
+  }" placeholder="Precio 7 días" style="background:#2a2a2a; color:white; padding:0.5em; border:none; border-radius:5px;" disabled />
+  <input type="number" value="${
+    p.precio_14dias ?? ""
+  }" placeholder="Precio 14 días" style="background:#2a2a2a; color:white; padding:0.5em; border:none; border-radius:5px;" disabled />
+  <input type="number" value="${
+    p.precio_21dias ?? ""
+  }" placeholder="Precio 21 días" style="background:#2a2a2a; color:white; padding:0.5em; border:none; border-radius:5px;" disabled />
+  <input type="number" value="${
+    p.precio_28dias ?? ""
+  }" placeholder="Precio 28 días" style="background:#2a2a2a; color:white; padding:0.5em; border:none; border-radius:5px;" disabled />
+  <input type="number" value="${
+    p.precio_historico ?? ""
+  }" placeholder="Precio Histórico" style="background:#2a2a2a; color:white; padding:0.5em; border:none; border-radius:5px;" disabled />
 
-        <div style="display: flex; gap: 0.5em;">
-          <button class="btn-editar">✏️ Editar</button>
-          <button class="btn-guardar" style="display:none; background:#03dac6;">💾 Guardar</button>
-          <button onclick="eliminarProducto(${
-            p.id
-          })" style="background: #e53935; color:white;">🗑️ Eliminar</button>
-        </div>
-      `;
+  <div style="display: flex; gap: 0.5em;">
+    <button class="btn-editar">✏️ Editar</button>
+    <button class="btn-guardar" style="display:none; background:#03dac6;">💾 Guardar</button>
+    <button onclick="eliminarProducto(${
+      p.id
+    })" style="background: #e53935; color:white;">🗑️ Eliminar</button>
+  </div>
+`;
 
             const inputs = tarjeta.querySelectorAll("input");
             const btnEditar = tarjeta.querySelector(".btn-editar");
@@ -239,7 +252,8 @@
                 precio_7dias: parseFloat(inputs[2].value),
                 precio_14dias: parseFloat(inputs[3].value),
                 precio_21dias: parseFloat(inputs[4].value),
-                precio_historico: parseFloat(inputs[5].value),
+                precio_28dias: parseFloat(inputs[5].value), // ✅ este es nuevo
+                precio_historico: parseFloat(inputs[6].value),
               };
 
               try {
@@ -356,18 +370,6 @@
 
     <script>
       cargarSemanas();
-    </script>
-
-    <script>
-      fetch("https://veterinarialol.ddns.net:4000/verificar-sesion", {
-        credentials: "include",
-      }).then((res) => {
-        if (!res.ok) {
-          window.location.href = "/login.html";
-        } else {
-          document.getElementById("formProducto").style.display = "block";
-        }
-      });
     </script>
   </body>
 </html>
