@@ -128,7 +128,6 @@ app.get('/inflacion', (req, res) => {
 app.post('/desplazar', (req, res) => {
   const query = `
     UPDATE inflacion SET
-      precio_28dias = precio_21dias,
       precio_21dias = precio_14dias,
       precio_14dias = precio_7dias,
       precio_7dias = precio_hoy
