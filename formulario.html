@@ -368,6 +368,19 @@
       }
     </script>
 
+
+    <script>
+      fetch("https://veterinarialol.ddns.net:4000/verificar-sesion", {
+        credentials: "include",
+      }).then((res) => {
+        if (!res.ok) {
+          window.location.href = "/login.html";
+        } else {
+          document.getElementById("formProducto").style.display = "block";
+        }
+      });
+    </script>
+
     <script>
       cargarSemanas();
     </script>
