@@ -34,7 +34,6 @@ button:hover {
 }
 
 form#formProducto {
-  display: none !important;
 }
 
 @media (max-width: 600px) {

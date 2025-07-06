@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="./css/formulario.css" />
   </head>
   <body>
-    <form id="formProducto" style="display: none">
+    <form id="formProducto">
       <input type="hidden" id="id" />
 
       <label for="nombre">Nombre del producto</label>
@@ -366,6 +366,15 @@
           console.error(err);
         }
       }
+    </script>
+
+    <script>
+      const btnAgregar = document.getElementById("btnAgregar");
+      btnAgregar.onclick = () => {
+        document.getElementById("id").value = ""; // limpia el hidden
+        form.reset(); // limpia los inputs
+        form.style.display = "flex"; // muestra el form
+      };
     </script>
 
     <script>

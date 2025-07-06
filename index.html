@@ -104,7 +104,6 @@
       }
 
       .tarjeta-nombre {
-        font-size: 1.2em;
         font-weight: bold;
         text-transform: capitalize;
       }
@@ -718,11 +717,13 @@
             suma2 = 0,
             suma3 = 0,
             suma4 = 0, // ✅ agregado
+            suma5 = 0,
             sumaHist = 0;
           let count1 = 0,
             count2 = 0,
             count3 = 0,
             count4 = 0, // ✅ agregado
+            count5 = 0,
             countHist = 0;
 
           const variacion = (a, b) =>
@@ -733,6 +734,7 @@
             const v2 = variacion(p.precio_7dias, p.precio_14dias);
             const v3 = variacion(p.precio_14dias, p.precio_21dias);
             const v4 = variacion(p.precio_hoy, p.precio_28dias);
+            const v5 = variacion(p.precio_hoy, p.precio_21dias);
             const vh = variacion(p.precio_hoy, p.precio_historico);
             if (v1 !== null) {
               suma1 += v1;
@@ -749,6 +751,10 @@
             if (v4 !== null) {
               suma4 += v4;
               count4++;
+            }
+            if (v4 !== null) {
+              suma5 += v5;
+              count5++;
             }
             if (vh !== null) {
               sumaHist += vh;
@@ -812,7 +818,8 @@
   ${generarTarjetaPromedio("Variación 1 semana", promedio(suma1, count1))}
   ${generarTarjetaPromedio("Variación 2 semanas", promedio(suma2, count2))}
   ${generarTarjetaPromedio("Variación 3 semanas", promedio(suma3, count3))}
-  ${generarTarjetaPromedio("Variación mensual*", promedio(suma4, count4))}
+  ${generarTarjetaPromedio("Variación intermensual", promedio(suma5, count5))}
+  ${generarTarjetaPromedio("Total mensual", promedio(suma4, count4))}
   ${generarTarjetaPromedio("Respecto a Nov/24", promedio(sumaHist, countHist))}
 `;
 
